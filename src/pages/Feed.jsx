@@ -85,12 +85,14 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Header */}
+      {/* Header — mobile shows logo + actions, desktop just shows title */}
       <div className="sticky top-0 z-20 bg-[#0B0B0F]/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
-        <h1 className="text-white text-2xl font-bold">
-          Feed<span className="text-purple-400">Bolt</span>
+        <h1 className="text-white text-2xl font-bold lg:text-lg lg:font-semibold">
+          Feed<span className="text-purple-400 lg:hidden">Bolt</span>
+          <span className="hidden lg:inline text-white"> — Latest</span>
         </h1>
-        <div className="flex items-center gap-3">
+        {/* Mobile-only actions */}
+        <div className="flex items-center gap-3 lg:hidden">
           <button
             onClick={() => navigate("/create-post")}
             className="w-9 h-9 bg-[#121218] rounded-full flex items-center justify-center border border-gray-800 hover:border-purple-700 transition-colors"
@@ -105,10 +107,21 @@ export default function FeedPage() {
             />
           </button>
         </div>
+        {/* Desktop refresh */}
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="hidden lg:block text-gray-500 hover:text-purple-400 transition-colors"
+        >
+          <RefreshCw
+            size={16}
+            className={refreshing ? "animate-spin text-purple-400" : ""}
+          />
+        </button>
       </div>
 
-      {/* Refresh button */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+      {/* Refresh button — mobile only */}
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between lg:hidden">
         <span className="text-gray-500 text-xs uppercase tracking-widest">
           Latest Posts
         </span>

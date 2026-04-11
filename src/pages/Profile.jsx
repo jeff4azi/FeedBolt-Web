@@ -88,9 +88,10 @@ export default function ProfilePage() {
         <h2 className="text-white text-lg font-semibold">Profile</h2>
         <button
           onClick={handleSignOut}
-          className="text-purple-400 hover:text-purple-300 transition-colors"
+          className="flex items-center gap-2 text-gray-500 hover:text-red-400 text-xs transition-colors"
         >
-          <LogOut size={22} />
+          <LogOut size={16} />
+          <span className="hidden lg:inline">Sign out</span>
         </button>
       </div>
 
