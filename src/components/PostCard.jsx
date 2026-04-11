@@ -12,12 +12,15 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { getOptimizedImageUrl, deletePostImage } from "../lib/imageUtils";
 import Avatar from "./Avatar";
+import ConfirmDialog from "./ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
 
 function OwnerMenu({ post, onDeleted, onDeletingChange }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef(null);
+  const { confirm, state, handleConfirm, handleCancel } = useConfirm();
 
   useEffect(() => {
     if (!open) return;
@@ -32,7 +35,8 @@ function OwnerMenu({ post, onDeleted, onDeletingChange }) {
   const handleDelete = async (e) => {
     e.stopPropagation();
     setOpen(false);
-    if (!window.confirm("Delete this post?")) return;
+    const ok = await confirm("Delete this post?");
+    if (!ok) return;
     setDeleting(true);
     onDeletingChange?.(true);
     try {
@@ -53,6 +57,13 @@ function OwnerMenu({ post, onDeleted, onDeletingChange }) {
 
   return (
     <div className="relative" ref={menuRef}>
+      {state && (
+        <ConfirmDialog
+          message={state.message}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
       <button
         onClick={(e) => {
           e.stopPropagation();

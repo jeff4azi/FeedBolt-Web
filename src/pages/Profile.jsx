@@ -6,6 +6,8 @@ import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
 import { PostCardSkeleton, ProfileSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const { confirm, state, handleConfirm, handleCancel } = useConfirm();
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -53,7 +56,8 @@ export default function ProfilePage() {
   }, [fetchData]);
 
   const handleSignOut = async () => {
-    if (!window.confirm("Are you sure you want to sign out?")) return;
+    const ok = await confirm("Are you sure you want to sign out?");
+    if (!ok) return;
     try {
       await signOut();
       navigate("/auth");
@@ -72,6 +76,13 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {state && (
+        <ConfirmDialog
+          message={state.message}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
       {/* Header */}
       <div className="sticky top-0 z-20 bg-[#0B0B0F]/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
         <h2 className="text-white text-lg font-semibold">Profile</h2>
