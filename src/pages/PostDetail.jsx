@@ -21,6 +21,22 @@ export default function PostDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [kbHeight, setKbHeight] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      const height = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKbHeight(height);
+    };
+    vv.addEventListener("resize", handler);
+    vv.addEventListener("scroll", handler);
+    return () => {
+      vv.removeEventListener("resize", handler);
+      vv.removeEventListener("scroll", handler);
+    };
+  }, []);
 
   const fetchLikes = useCallback(async () => {
     const { data, count } = await supabase
@@ -200,8 +216,10 @@ export default function PostDetailPage() {
         ) : null}
       </div>
 
-      {/* Comment input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0B0B0F] border-t border-gray-800 px-4 py-3 z-20">
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-[#0B0B0F] border-t border-gray-800 px-4 py-3 z-20 transition-all duration-200"
+        style={{ bottom: kbHeight }}
+      >
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Avatar src={userAvatar} size={32} />
           <form
