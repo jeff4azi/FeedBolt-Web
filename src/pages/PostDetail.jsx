@@ -42,10 +42,18 @@ export default function PostDetailPage() {
   const fetchComments = useCallback(async () => {
     const { data } = await supabase
       .from("comments")
-      .select("*, profiles(id, fullname, username, avatar_url)")
+      .select(
+        "*, profiles(id, fullname, username, avatar_url), reply_count:comment_replies(count)",
+      )
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
-    if (data) setComments(data);
+    if (data)
+      setComments(
+        data.map((c) => ({
+          ...c,
+          reply_count: c.reply_count?.[0]?.count ?? 0,
+        })),
+      );
   }, [postId]);
 
   useEffect(() => {
