@@ -1,20 +1,22 @@
 {
-  "name": "Feed Bolt",
-  "short_name": "Feed Bolt",
-  "start_url": ".",
+  "name": "FeedBolt",
+  "short_name": "FeedBolt",
+  "description": "Share posts, follow people, and stay connected.",
+  "start_url": "/feed",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#0B0B0F",
+  "theme_color": "#0B0B0F",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/icon-192x192.png",
+      "src": "/FeedBolt.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "/FeedBolt.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
