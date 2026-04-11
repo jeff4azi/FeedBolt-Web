@@ -97,12 +97,6 @@ export default function CreatePostPage() {
               rows={5}
               className="w-full bg-transparent text-gray-200 text-base leading-6 resize-none outline-none placeholder-gray-600"
             />
-            <p
-              className={`text-xs text-right mt-1 ${content.length > 250 ? "text-red-400" : "text-gray-600"}`}
-            >
-              {280 - content.length}
-            </p>
-
             {previewUrl && (
               <div className="relative mt-3">
                 <img
@@ -118,25 +112,31 @@ export default function CreatePostPage() {
                 </button>
               </div>
             )}
+
+            {/* Toolbar row: image picker + char count */}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePickImage}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-purple-400 hover:text-purple-300 transition-colors"
+                title="Add image"
+              >
+                <ImagePlus size={20} />
+              </button>
+              <p
+                className={`text-xs ${content.length > 250 ? "text-red-400" : "text-gray-600"}`}
+              >
+                {280 - content.length}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Bottom toolbar */}
-      <div className="px-4 py-3 border-t border-gray-800 flex items-center">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handlePickImage}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="text-purple-400 hover:text-purple-300 transition-colors"
-        >
-          <ImagePlus size={22} />
-        </button>
       </div>
     </div>
   );
