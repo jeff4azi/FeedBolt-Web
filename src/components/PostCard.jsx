@@ -10,10 +10,15 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
-import { getOptimizedImageUrl, deletePostImage } from "../lib/imageUtils";
+import {
+  getOptimizedImageUrl,
+  getPlaceholderUrl,
+  deletePostImage,
+} from "../lib/imageUtils";
 import Avatar from "./Avatar";
 import ConfirmDialog from "./ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
+import ProgressiveImage from "./ProgressiveImage";
 
 function OwnerMenu({ post, onDeleted, onDeletingChange }) {
   const navigate = useNavigate();
@@ -111,7 +116,15 @@ export default function PostCard({
   const profile = post.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
   const timestamp = new Date(post.created_at).toLocaleDateString();
-  const imageUri = post.image_url ? getOptimizedImageUrl(post.image_url) : null;
+  const imageUri400 = post.image_url
+    ? getOptimizedImageUrl(post.image_url, { width: "w_400" })
+    : null;
+  const imageUri500 = post.image_url
+    ? getOptimizedImageUrl(post.image_url, { width: "w_500" })
+    : null;
+  const imagePlaceholder = post.image_url
+    ? getPlaceholderUrl(post.image_url)
+    : null;
   const commentCount = post.comments?.[0]?.count ?? 0;
   const isOwner = showOwnerActions && user?.id === post.user_id;
 
@@ -192,11 +205,14 @@ export default function PostCard({
         {post.content}
       </p>
 
-      {imageUri && (
-        <img
-          src={imageUri}
+      {imageUri400 && (
+        <ProgressiveImage
+          src={imageUri500}
+          placeholderSrc={imagePlaceholder}
           alt="post"
-          className="w-full rounded-xl mb-4 object-cover max-h-[750px]"
+          loading="lazy"
+          className="w-full rounded-xl mb-4 max-h-[750px]"
+          style={{ aspectRatio: "16/9" }}
           onClick={(e) => e.stopPropagation()}
         />
       )}

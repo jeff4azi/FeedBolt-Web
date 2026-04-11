@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import ProgressiveImage from "./ProgressiveImage";
+import { getPlaceholderUrl } from "../lib/imageUtils";
 
 export default function ImageViewer({ uri, visible, onClose }) {
   useEffect(() => {
@@ -18,10 +20,13 @@ export default function ImageViewer({ uri, visible, onClose }) {
       className="fixed inset-0 z-50 bg-black flex items-center justify-center"
       onClick={onClose}
     >
-      <img
+      <ProgressiveImage
         src={uri}
+        placeholderSrc={getPlaceholderUrl(uri)}
         alt="full size"
-        className="max-w-full max-h-full object-contain"
+        loading="eager"
+        className="max-w-full max-h-full"
+        style={{ maxWidth: "100vw", maxHeight: "100vh" }}
         onClick={(e) => e.stopPropagation()}
       />
       <button

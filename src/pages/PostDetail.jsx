@@ -3,10 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, MessageCircle, Send } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { getOptimizedImageUrl, getPlaceholderUrl } from "../lib/imageUtils";
 import CommentItem from "../components/CommentItem";
 import ImageViewer from "../components/ImageViewer";
 import { PostDetailSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
+import ProgressiveImage from "../components/ProgressiveImage";
 
 export default function PostDetailPage() {
   const navigate = useNavigate();
@@ -100,7 +102,15 @@ export default function PostDetailPage() {
 
   const profile = post?.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
-  const imageUri = post?.image_url;
+  const imageUri = post?.image_url
+    ? getOptimizedImageUrl(post.image_url, { width: "w_400" })
+    : null;
+  const imagePlaceholder = post?.image_url
+    ? getPlaceholderUrl(post.image_url)
+    : null;
+  const imageViewerUri = post?.image_url
+    ? getOptimizedImageUrl(post.image_url, { width: "w_700" })
+    : null;
   const userAvatar = user?.user_metadata?.avatar_url;
 
   return (
@@ -144,10 +154,12 @@ export default function PostDetailPage() {
                   onClick={() => setImageViewerOpen(true)}
                   className="w-full mb-4"
                 >
-                  <img
+                  <ProgressiveImage
                     src={imageUri}
+                    placeholderSrc={imagePlaceholder}
                     alt="post"
-                    className="w-full rounded-xl object-cover"
+                    loading="lazy"
+                    className="w-full rounded-xl"
                     style={{ aspectRatio: "16/9" }}
                   />
                 </button>
@@ -212,9 +224,9 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {imageUri && (
+      {imageViewerUri && (
         <ImageViewer
-          uri={imageUri}
+          uri={imageViewerUri}
           visible={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
         />

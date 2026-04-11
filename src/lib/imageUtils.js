@@ -4,12 +4,20 @@ export function getOptimizedImageUrl(url, options = {}) {
   if (!url || !url.includes("res.cloudinary.com")) return url;
   const {
     format = "f_auto",
-    quality = "q_auto",
-    width = "w_800",
+    quality = "q_auto:eco",
+    width,
     crop = "c_limit",
   } = options;
   const transforms = [format, quality, width, crop].filter(Boolean).join(",");
   return url.replace("/upload/", `/upload/${transforms}/`);
+}
+
+export function getPlaceholderUrl(url) {
+  return getOptimizedImageUrl(url, {
+    width: "w_50",
+    quality: "q_10",
+    crop: "c_limit",
+  });
 }
 
 export async function uploadImageFile(file) {
