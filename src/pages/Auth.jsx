@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-
+import FeedBoltLogo from "/src/assets/feedbolt.jpg";
 function GoogleIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ export default function AuthPage() {
       <div className="flex flex-col items-center z-10">
         <div className="bg-[#16161E] p-6 rounded-[32px] mb-8 border border-gray-800/50 shadow-2xl">
           <img
-            src="/src/assets/feedbolt.jpg"
+            src={FeedBoltLogo}
             alt="FeedBolt"
             className="w-20 h-20 rounded-2xl object-contain"
           />
