@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -7,12 +7,18 @@ import PostCard from "../components/PostCard";
 import { PostCardSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 
+const PAGE_SIZE = 50;
+
 export default function FeedPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+  const sentinelRef = useRef(null);
+  const postsLengthRef = useRef(0);
 
   const fetchPosts = useCallback(async () => {
     const { data, error } = await supabase
@@ -20,17 +26,57 @@ export default function FeedPage() {
       .select(
         "*, profiles(id, fullname, username, avatar_url), comments(count)",
       )
-      .order("created_at", { ascending: false });
-    if (!error) setPosts(data ?? []);
+      .order("created_at", { ascending: false })
+      .range(0, PAGE_SIZE - 1);
+    if (!error) {
+      const result = data ?? [];
+      setPosts(result);
+      postsLengthRef.current = result.length;
+      setExhausted(result.length < PAGE_SIZE);
+    }
     setLoading(false);
   }, []);
+
+  const fetchMore = useCallback(async () => {
+    if (loadingMore || exhausted) return;
+    setLoadingMore(true);
+    const from = postsLengthRef.current;
+    const { data, error } = await supabase
+      .from("posts")
+      .select(
+        "*, profiles(id, fullname, username, avatar_url), comments(count)",
+      )
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    if (!error && data) {
+      setPosts((p) => [...p, ...data]);
+      postsLengthRef.current = from + data.length;
+      if (data.length < PAGE_SIZE) setExhausted(true);
+    }
+    setLoadingMore(false);
+  }, [loadingMore, exhausted]);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
+  // Intersection observer to trigger fetchMore
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) fetchMore();
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [fetchMore]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
+    setExhausted(false);
+    postsLengthRef.current = 0;
     await fetchPosts();
     setRefreshing(false);
   };
@@ -86,14 +132,31 @@ export default function FeedPage() {
           No posts yet. Be the first!
         </p>
       ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            currentUserId={user?.id}
-            onRefresh={fetchPosts}
-          />
-        ))
+        <>
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={user?.id}
+              onRefresh={fetchPosts}
+            />
+          ))}
+
+          {/* Sentinel + load more states */}
+          <div ref={sentinelRef} className="pb-2">
+            {loadingMore && (
+              <>
+                <PostCardSkeleton />
+                <PostCardSkeleton />
+              </>
+            )}
+            {exhausted && !loadingMore && (
+              <p className="text-gray-600 text-xs text-center py-6">
+                you're all caught up
+              </p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
