@@ -74,15 +74,18 @@ export default function PostDetailPage() {
   };
 
   const handleAddComment = async (e) => {
-    e?.preventDefault();
-    if (commentText.trim().length === 0) return;
+    e.preventDefault();
+    const text = commentText.trim();
+    if (!text) return;
+    setCommentText("");
     const { error } = await supabase.from("comments").insert({
       post_id: postId,
       user_id: user.id,
-      content: commentText.trim(),
+      content: text,
     });
-    if (!error) {
-      setCommentText("");
+    if (error) {
+      setCommentText(text);
+    } else {
       fetchComments();
     }
   };
@@ -106,7 +109,7 @@ export default function PostDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-20">
         {loading ? (
           <PostDetailSkeleton />
         ) : post ? (
@@ -178,7 +181,7 @@ export default function PostDetailPage() {
       </div>
 
       {/* Comment input */}
-      <div className="fixed bottom-16 left-0 right-0 bg-[#0B0B0F] border-t border-gray-800 px-4 py-3 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0B0B0F] border-t border-gray-800 px-4 py-3 z-20">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Avatar src={userAvatar} size={32} />
           <form
