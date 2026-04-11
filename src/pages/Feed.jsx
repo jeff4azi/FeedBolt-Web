@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
 import { PostCardSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
+import InstallPrompt from "../components/InstallPrompt";
 
 const PAGE_SIZE = 50;
 
@@ -138,6 +139,7 @@ export default function FeedPage() {
       </div>
 
       {/* Posts */}
+      <InstallPrompt />
       {loading ? (
         [1, 2, 3].map((i) => <PostCardSkeleton key={i} />)
       ) : posts.length === 0 ? (
