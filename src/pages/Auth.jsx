@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import FeedBoltLogo from "../assets/feedbolt.jpg";
+import FeedBoltLogo from "../assets/FeedBolt.jpg";
 function GoogleIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24">
