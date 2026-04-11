@@ -211,8 +211,8 @@ export default function PostCard({
           placeholderSrc={imagePlaceholder}
           alt="post"
           loading="lazy"
-          className="w-full rounded-xl mb-4 max-h-[750px]"
-          style={{ aspectRatio: "16/9" }}
+          className="w-full mb-4"
+          style={{ maxHeight: "700px" }}
           onClick={(e) => e.stopPropagation()}
         />
       )}
