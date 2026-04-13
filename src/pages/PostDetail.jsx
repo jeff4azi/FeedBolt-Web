@@ -290,6 +290,9 @@ export default function PostDetailPage() {
                   comment={c}
                   postId={postId}
                   onReply={handleReply}
+                  onDeleteComment={(id) =>
+                    setComments((prev) => prev.filter((x) => x.id !== id))
+                  }
                   replyTarget={replyTarget}
                   onRegisterFetch={(fn) => {
                     fetchRepliesRef.current[c.id] = fn;
