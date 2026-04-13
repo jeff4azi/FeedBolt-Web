@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
 import { PostCardSkeleton, ProfileSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
+import { handleFollowNotification } from "../lib/notifications";
 
 export default function UserProfilePage() {
   const navigate = useNavigate();
@@ -78,6 +79,14 @@ export default function UserProfilePage() {
       await supabase
         .from("follows")
         .insert({ follower_id: user.id, following_id: userId });
+      handleFollowNotification({
+        followedUserId: userId,
+        actorId: user.id,
+        actorUsername:
+          user.user_metadata?.username ??
+          user.user_metadata?.full_name ??
+          "Someone",
+      });
     }
   };
 

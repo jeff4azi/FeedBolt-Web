@@ -4,6 +4,7 @@ import {
   Bell,
   Heart,
   MessageCircle,
+  UserPlus,
   CheckCheck,
   ArrowLeft,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const TYPE_META = {
     bg: "bg-purple-500/10",
   },
   reply: { icon: MessageCircle, color: "text-blue-400", bg: "bg-blue-500/10" },
+  follow: { icon: UserPlus, color: "text-green-400", bg: "bg-green-500/10" },
 };
 
 function NotifRow({ notif, onClick }) {

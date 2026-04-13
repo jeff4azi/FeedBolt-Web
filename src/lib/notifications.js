@@ -81,6 +81,23 @@ export async function handleReplyNotification({
   });
 }
 
+// ── Called after a user is followed ──────────────────────────────────────
+export async function handleFollowNotification({
+  followedUserId,
+  actorId,
+  actorUsername,
+}) {
+  if (followedUserId === actorId) return;
+  const message = `${actorUsername} started following you`;
+  await insertNotification({
+    userId: followedUserId,
+    type: "follow",
+    actorId,
+    actorUsername,
+    message,
+  });
+}
+
 export async function requestNotificationPermission() {
   return "unsupported";
 }
