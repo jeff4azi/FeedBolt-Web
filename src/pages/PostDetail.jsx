@@ -211,7 +211,9 @@ export default function PostDetailPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-[#0B0B0F]/95 backdrop-blur-sm flex items-center px-4 py-3 border-b border-gray-800">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() =>
+            window.history.length > 1 ? navigate(-1) : navigate("/feed")
+          }
           className="mr-3 text-white hover:text-gray-300 transition-colors"
         >
           <ArrowLeft size={22} />

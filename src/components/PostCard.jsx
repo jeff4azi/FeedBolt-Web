@@ -4,6 +4,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  Check,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -173,9 +174,20 @@ export default function PostCard({
     else navigate(`/user/${profile.id}`);
   };
 
-  const handleShare = (e) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async (e) => {
     e.stopPropagation();
-    navigator.clipboard?.writeText(`${window.location.origin}/post/${post.id}`);
+    const url = `${window.location.origin}/post/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "FeedBolt post", url });
+      } catch (_) {}
+    } else {
+      await navigator.clipboard?.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -239,8 +251,18 @@ export default function PostCard({
           <MessageCircle size={18} color="#6b7280" />
           <span className="text-gray-400 text-xs">{commentCount}</span>
         </button>
-        <button onClick={handleShare} className="flex items-center gap-1.5">
-          <Share2 size={18} color="#6b7280" />
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 transition-colors"
+        >
+          {copied ? (
+            <>
+              <Check size={18} color="#a855f7" />
+              <span className="text-purple-400 text-xs">Copied</span>
+            </>
+          ) : (
+            <Share2 size={18} color="#6b7280" />
+          )}
         </button>
       </div>
     </div>
