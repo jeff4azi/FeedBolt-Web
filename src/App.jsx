@@ -18,6 +18,7 @@ import UserProfilePage from "./pages/UserProfile";
 import EditProfilePage from "./pages/EditProfile";
 import EditPostPage from "./pages/EditPost";
 import SearchPage from "./pages/Search";
+import NotificationsPage from "./pages/Notifications";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
@@ -45,6 +46,7 @@ function RootNavigator() {
       <Route element={<Layout />}>
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
       <Route path="/post/:postId" element={<PostDetailPage />} />

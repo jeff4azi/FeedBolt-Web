@@ -1,4 +1,4 @@
-const CACHE = "feedbolt-v1";
+const CACHE = "feedbolt-v2";
 
 // Assets to pre-cache on install
 const PRECACHE = ["/", "/feed", "/manifest.json"];
@@ -55,5 +55,36 @@ self.addEventListener("fetch", (e) => {
           return res;
         }),
     ),
+  );
+});
+
+// ── Push notifications ────────────────────────────────────────────────────
+self.addEventListener("message", (e) => {
+  if (e.data?.type !== "SHOW_NOTIFICATION") return;
+  const { title, body, url } = e.data;
+  self.registration.showNotification(title, {
+    body,
+    icon: "/FeedBolt.jpg",
+    badge: "/FeedBolt.jpg",
+    data: { url },
+    vibrate: [100, 50, 100],
+  });
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = e.notification.data?.url ?? "/notifications";
+  e.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((list) => {
+        const existing = list.find((c) => c.url.includes(self.location.origin));
+        if (existing) {
+          existing.focus();
+          existing.navigate(url);
+        } else {
+          clients.openWindow(url);
+        }
+      }),
   );
 });

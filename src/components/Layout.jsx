@@ -1,12 +1,14 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, User, Plus, Search } from "lucide-react";
+import { Home, User, Plus, Search, Bell } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
+import { useUnreadCount } from "../hooks/useNotifications";
 
 export default function Layout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const avatar = user?.user_metadata?.avatar_url;
+  const unread = useUnreadCount();
 
   const navItem = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
@@ -35,6 +37,17 @@ export default function Layout() {
           <NavLink to="/search" className={navItem}>
             <Search size={19} />
             Search
+          </NavLink>
+          <NavLink to="/notifications" className={navItem}>
+            <div className="relative">
+              <Bell size={19} />
+              {unread > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-purple-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+            </div>
+            Notifications
           </NavLink>
           <NavLink to="/profile" className={navItem}>
             <User size={19} />
@@ -96,6 +109,24 @@ export default function Layout() {
         >
           <Search size={22} />
           Search
+        </NavLink>
+        <NavLink
+          to="/notifications"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 flex-1 text-xs font-medium transition-colors ${
+              isActive ? "text-purple-400" : "text-gray-500"
+            }`
+          }
+        >
+          <div className="relative">
+            <Bell size={22} />
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </div>
+          Alerts
         </NavLink>
         <NavLink
           to="/profile"

@@ -10,6 +10,10 @@ import { PostDetailSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ProgressiveImage from "../components/ProgressiveImage";
 import RichText from "../components/RichText";
+import {
+  handleCommentNotification,
+  handleLikeNotification,
+} from "../lib/notifications";
 
 export default function PostDetailPage() {
   const navigate = useNavigate();
@@ -92,11 +96,20 @@ export default function PostDetailPage() {
         .eq("post_id", postId)
         .eq("user_id", user.id);
     } else {
+      const newCount = likeCount + 1;
       setLiked(true);
-      setLikeCount((c) => c + 1);
+      setLikeCount(newCount);
       await supabase
         .from("likes")
         .insert({ post_id: postId, user_id: user.id });
+      if (post?.user_id) {
+        handleLikeNotification({
+          postId,
+          postOwnerId: post.user_id,
+          currentUserId: user.id,
+          newCount,
+        });
+      }
     }
   };
 
@@ -114,6 +127,19 @@ export default function PostDetailPage() {
       setCommentText(text);
     } else {
       fetchComments();
+      if (post?.user_id) {
+        const actorUsername =
+          user.user_metadata?.username ??
+          user.user_metadata?.full_name ??
+          user.email ??
+          "Someone";
+        handleCommentNotification({
+          postId,
+          postOwnerId: post.user_id,
+          actorId: user.id,
+          actorUsername,
+        });
+      }
     }
   };
 
@@ -212,7 +238,9 @@ export default function PostDetailPage() {
                 No comments yet. Be the first!
               </p>
             ) : (
-              comments.map((c) => <CommentItem key={c.id} comment={c} />)
+              comments.map((c) => (
+                <CommentItem key={c.id} comment={c} postId={postId} />
+              ))
             )}
           </div>
         ) : null}

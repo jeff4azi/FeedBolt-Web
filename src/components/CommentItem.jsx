@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import Avatar from "./Avatar";
 import RichText from "./RichText";
+import { handleReplyNotification } from "../lib/notifications";
 
 function ReplyItem({ reply, onReply }) {
   const profile = reply.profiles;
@@ -50,7 +51,7 @@ function ReplyItem({ reply, onReply }) {
   );
 }
 
-export default function CommentItem({ comment }) {
+export default function CommentItem({ comment, postId }) {
   const { user } = useAuth();
   const profile = comment.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
@@ -135,6 +136,20 @@ export default function CommentItem({ comment }) {
       setShowReplies(true);
       setReplying(false);
       setReplyingTo(null);
+      // notify the comment owner
+      if (comment.user_id !== user.id) {
+        const actorUsername =
+          user.user_metadata?.username ??
+          user.user_metadata?.full_name ??
+          user.email ??
+          "Someone";
+        handleReplyNotification({
+          postId,
+          replyOwnerId: comment.user_id,
+          actorId: user.id,
+          actorUsername,
+        });
+      }
     }
   };
 
