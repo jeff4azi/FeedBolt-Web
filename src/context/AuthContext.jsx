@@ -6,6 +6,14 @@ const AuthContext = createContext(null);
 async function showBrowserNotification(message) {
   if (!("Notification" in window) || Notification.permission !== "granted")
     return;
+
+  // If page is visible, use Notification API directly
+  if (document.visibilityState === "visible") {
+    new Notification("FeedBolt", { body: message, icon: "/FeedBolt.jpg" });
+    return;
+  }
+
+  // Page is hidden — use service worker
   if (!("serviceWorker" in navigator)) return;
   const sw = await navigator.serviceWorker.ready;
   sw?.active?.postMessage({
