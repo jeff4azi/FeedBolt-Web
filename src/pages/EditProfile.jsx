@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { uploadImageFile, deleteAvatarImage } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
 
 function Field({ label, inputClassName = "", ...props }) {
@@ -27,6 +28,10 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [pickedFile, setPickedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [hasExistingAvatar, setHasExistingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -41,9 +46,17 @@ export default function EditProfilePage() {
           setUsername(data.username ?? "");
           setBio(data.bio ?? "");
           setAvatar(data.avatar_url ?? user?.user_metadata?.avatar_url ?? null);
+          setHasExistingAvatar(!!data.avatar_public_id);
         }
       });
   }, [user]);
+
+  const handlePickAvatar = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPickedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
 
   const handleSave = async () => {
     if (!displayName.trim()) {
@@ -52,13 +65,28 @@ export default function EditProfilePage() {
     }
     setSaving(true);
     try {
+      let newAvatarUrl = avatar;
+      let newAvatarPublicId = undefined;
+      if (pickedFile) {
+        if (hasExistingAvatar) {
+          await deleteAvatarImage(user.id).catch(() => {}); // non-fatal
+        }
+        const uploaded = await uploadImageFile(pickedFile);
+        newAvatarUrl = uploaded.image_url;
+        newAvatarPublicId = uploaded.image_public_id;
+      }
+      const updatePayload = {
+        fullname: displayName.trim(),
+        username: username.trim(),
+        bio: bio.trim(),
+        avatar_url: newAvatarUrl,
+        ...(newAvatarPublicId !== undefined && {
+          avatar_public_id: newAvatarPublicId,
+        }),
+      };
       const { error } = await supabase
         .from("profiles")
-        .update({
-          fullname: displayName.trim(),
-          username: username.trim(),
-          bio: bio.trim(),
-        })
+        .update(updatePayload)
         .eq("id", user.id);
       if (error) throw error;
       navigate(-1);
@@ -92,11 +120,26 @@ export default function EditProfilePage() {
       <div className="flex-1 overflow-y-auto">
         {/* Avatar */}
         <div className="flex justify-center py-6">
-          <Avatar
-            src={avatar}
-            size={96}
-            className="border-2 border-purple-600"
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePickAvatar}
           />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="relative"
+          >
+            <Avatar
+              src={previewUrl ?? avatar}
+              size={96}
+              className="border-2 border-purple-600"
+            />
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+              <Camera size={22} className="text-white" />
+            </div>
+          </button>
         </div>
 
         <div className="px-4 flex flex-col gap-5 pb-8">

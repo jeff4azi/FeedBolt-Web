@@ -105,3 +105,15 @@ export async function deletePostImage(postId) {
     throw new Error(err.error ?? `Failed to delete image (${res.status}).`);
   }
 }
+
+export async function deleteAvatarImage(userId) {
+  const res = await fetch(`${BASE_URL}/delete-avatar-image`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `Failed to delete avatar (${res.status}).`);
+  }
+}
