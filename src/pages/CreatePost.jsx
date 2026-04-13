@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { uploadImageFile } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
+import { trackEvent } from "../lib/analytics";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function CreatePostPage() {
         image_public_id,
       });
       if (error) throw error;
+      trackEvent("Post", "create", pickedFile ? "with_image" : "text_only");
       navigate(-1);
     } catch (err) {
       alert(err.message);

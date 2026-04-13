@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
 import Avatar from "../components/Avatar";
 import { PostCardSkeleton } from "../components/Skeleton";
+import { trackEvent } from "../lib/analytics";
 
 // ── Trending hashtag pill ──────────────────────────────────────────────────
 function TrendingTag({ tag, count, onClick }) {
@@ -149,6 +150,7 @@ export default function SearchPage() {
       users: usersRes.data ?? [],
       posts: postsRes.data ?? [],
     });
+    trackEvent("Search", "query", term);
     setLoading(false);
   }, []);
 

@@ -16,6 +16,7 @@ import {
   handleReplyNotification,
 } from "../lib/notifications";
 import { timeAgo } from "../lib/timeAgo";
+import { trackEvent } from "../lib/analytics";
 
 export default function PostDetailPage() {
   const navigate = useNavigate();
@@ -108,6 +109,7 @@ export default function PostDetailPage() {
       await supabase
         .from("likes")
         .insert({ post_id: postId, user_id: user.id });
+      trackEvent("Post", "like", postId);
       if (post?.user_id) {
         handleLikeNotification({
           postId,
@@ -147,6 +149,7 @@ export default function PostDetailPage() {
       // refresh replies on that comment
       fetchRepliesRef.current[replyTarget.commentId]?.({ show: true });
       setReplyTarget(null);
+      trackEvent("Comment", "reply", postId);
       if (replyTarget.commentOwnerId !== user.id) {
         handleReplyNotification({
           postId,
@@ -166,6 +169,7 @@ export default function PostDetailPage() {
         setCommentText(text);
         return;
       }
+      trackEvent("Comment", "create", postId);
       fetchComments();
       if (post?.user_id && post.user_id !== user.id) {
         handleCommentNotification({

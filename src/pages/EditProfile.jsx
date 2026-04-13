@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { uploadImageFile, deleteAvatarImage } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
+import { trackEvent } from "../lib/analytics";
 
 function Field({ label, inputClassName = "", ...props }) {
   return (
@@ -89,6 +90,7 @@ export default function EditProfilePage() {
         .update(updatePayload)
         .eq("id", user.id);
       if (error) throw error;
+      trackEvent("Profile", "update", pickedFile ? "with_avatar" : "info_only");
       navigate(-1);
     } catch (err) {
       alert(err.message);

@@ -19,11 +19,17 @@ import EditProfilePage from "./pages/EditProfile";
 import EditPostPage from "./pages/EditPost";
 import SearchPage from "./pages/Search";
 import NotificationsPage from "./pages/Notifications";
+import { trackPageView } from "./lib/analytics";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Track page views on every route change
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
 
   useEffect(() => {
     if (loading) return;

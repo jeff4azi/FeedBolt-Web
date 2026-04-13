@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import FeedBoltLogo from "../assets/FeedBolt.jpg";
+import { trackEvent } from "../lib/analytics";
 function GoogleIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24">
@@ -31,7 +32,9 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      trackEvent("Auth", "sign_in_attempt", "google");
       await signInWithGoogle();
+      trackEvent("Auth", "sign_in_success", "google");
     } catch (err) {
       alert(err.message);
       setLoading(false);
