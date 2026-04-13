@@ -59,7 +59,7 @@ function NotifRow({ notif, onClick }) {
 }
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, setUnreadCount } = useAuth();
   const navigate = useNavigate();
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ export default function NotificationsPage() {
   // Realtime subscription
   useEffect(() => {
     const channel = supabase
-      .channel("notifications-realtime")
+      .channel(`notifications-page-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -106,6 +106,7 @@ export default function NotificationsPage() {
       setNotifs((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)),
       );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     }
     if (notif.post_id) navigate(`/post/${notif.post_id}`);
   };
@@ -117,6 +118,7 @@ export default function NotificationsPage() {
       .eq("user_id", user.id)
       .eq("read", false);
     setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
   const unreadCount = notifs.filter((n) => !n.read).length;
