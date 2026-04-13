@@ -19,6 +19,7 @@ import Avatar from "./Avatar";
 import ConfirmDialog from "./ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import ProgressiveImage from "./ProgressiveImage";
+import RichText from "./RichText";
 
 function OwnerMenu({ post, onDeleted, onDeletingChange }) {
   const navigate = useNavigate();
@@ -201,9 +202,10 @@ export default function PostCard({
         )}
       </div>
 
-      <p className="text-gray-200 text-sm leading-5 mb-4 whitespace-pre-wrap">
-        {post.content}
-      </p>
+      <RichText
+        text={post.content}
+        className="text-gray-200 text-sm leading-5 mb-4 whitespace-pre-wrap"
+      />
 
       {imageUri400 && (
         <ProgressiveImage

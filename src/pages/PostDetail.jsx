@@ -9,6 +9,7 @@ import ImageViewer from "../components/ImageViewer";
 import { PostDetailSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ProgressiveImage from "../components/ProgressiveImage";
+import RichText from "../components/RichText";
 
 export default function PostDetailPage() {
   const navigate = useNavigate();
@@ -162,9 +163,10 @@ export default function PostDetailPage() {
                   </p>
                 </div>
               </div>
-              <p className="text-gray-200 text-base leading-6 mb-4 whitespace-pre-wrap">
-                {post.content}
-              </p>
+              <RichText
+                text={post.content}
+                className="text-gray-200 text-base leading-6 mb-4 whitespace-pre-wrap"
+              />
               {imageUri && (
                 <button
                   onClick={() => setImageViewerOpen(true)}

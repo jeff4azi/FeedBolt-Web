@@ -9,6 +9,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import Avatar from "./Avatar";
+import RichText from "./RichText";
 
 function ReplyItem({ reply, onReply }) {
   const profile = reply.profiles;
@@ -33,7 +34,10 @@ function ReplyItem({ reply, onReply }) {
             {new Date(reply.created_at).toLocaleDateString()}
           </span>
         </div>
-        <p className="text-gray-300 text-xs leading-5">{reply.content}</p>
+        <RichText
+          text={reply.content}
+          className="text-gray-300 text-xs leading-5"
+        />
         <button
           onClick={() => onReply(username)}
           className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs mt-1 transition-colors"
@@ -143,7 +147,10 @@ export default function CommentItem({ comment }) {
             <span className="text-white font-semibold text-xs">{username}</span>
             <span className="text-gray-600 text-xs">{timestamp}</span>
           </div>
-          <p className="text-gray-300 text-sm leading-5">{comment.content}</p>
+          <RichText
+            text={comment.content}
+            className="text-gray-300 text-sm leading-5"
+          />
         </div>
 
         {/* Actions */}
