@@ -92,7 +92,7 @@ export default function CreatePostPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's on your mind?"
-              maxLength={280}
+              maxLength={500}
               autoFocus
               rows={5}
               className="w-full bg-transparent text-gray-200 text-base leading-6 resize-none outline-none placeholder-gray-600"
@@ -130,9 +130,9 @@ export default function CreatePostPage() {
                 <ImagePlus size={20} />
               </button>
               <p
-                className={`text-xs ${content.length > 250 ? "text-red-400" : "text-gray-600"}`}
+                className={`text-xs ${content.length > 450 ? "text-red-400" : "text-gray-600"}`}
               >
-                {280 - content.length}
+                {500 - content.length}
               </p>
             </div>
           </div>
