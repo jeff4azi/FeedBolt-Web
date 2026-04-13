@@ -14,7 +14,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="/FeedBolt.jpg" />
     <link rel="apple-touch-icon" href="/FeedBolt.jpg" />
-    <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -33,18 +32,9 @@
       content="Share posts, follow people, and stay connected."
     />
     <meta name="twitter:image" content="/FeedBolt.jpg" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#000000" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js");
-        });
-      }
-    </script>
   </body>
 </html>
