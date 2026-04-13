@@ -192,7 +192,10 @@ export default function PostCard({
 
   return (
     <div
-      onClick={() => navigate(`/post/${post.id}`)}
+      onClick={() => {
+        sessionStorage.setItem("feed-scroll", window.scrollY);
+        navigate(`/post/${post.id}`);
+      }}
       className="bg-[#121218] rounded-2xl p-4 mb-3 mx-4 cursor-pointer hover:bg-[#16161e] transition-colors"
       style={{ opacity: isOwner && deleting ? 0.4 : 1 }}
     >

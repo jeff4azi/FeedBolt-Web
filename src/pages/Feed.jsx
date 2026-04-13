@@ -20,6 +20,7 @@ export default function FeedPage() {
   const [exhausted, setExhausted] = useState(false);
   const sentinelRef = useRef(null);
   const postsLengthRef = useRef(0);
+  const restoredRef = useRef(false);
 
   const fetchPosts = useCallback(async () => {
     const { data, error } = await supabase
@@ -60,6 +61,18 @@ export default function FeedPage() {
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  // Restore scroll position after posts load
+  useEffect(() => {
+    if (!loading && !restoredRef.current) {
+      restoredRef.current = true;
+      const saved = sessionStorage.getItem("feed-scroll");
+      if (saved) {
+        requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10)));
+        sessionStorage.removeItem("feed-scroll");
+      }
+    }
+  }, [loading]);
 
   // Intersection observer to trigger fetchMore
   useEffect(() => {
