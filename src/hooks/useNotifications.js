@@ -9,7 +9,7 @@ export function useUnreadCount() {
   useEffect(() => {
     if (!user) return;
 
-    const fetch = async () => {
+    const fetchCount = async () => {
       const { count: c } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
@@ -18,19 +18,39 @@ export function useUnreadCount() {
       setCount(c ?? 0);
     };
 
-    fetch();
+    fetchCount();
 
     const channel = supabase
-      .channel("unread-count")
+      .channel(`unread-count-${user.id}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        fetch,
+        () => setCount((prev) => prev + 1),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        fetchCount,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        fetchCount,
       )
       .subscribe();
 
