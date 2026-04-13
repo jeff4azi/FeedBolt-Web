@@ -1,6 +1,7 @@
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
 export default function RichText({ text, className }) {
+  if (!text) return <p className={className} />;
   const parts = text.split(URL_REGEX);
 
   return (

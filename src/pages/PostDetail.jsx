@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Send, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { getOptimizedImageUrl, getPlaceholderUrl } from "../lib/imageUtils";
@@ -13,6 +13,7 @@ import RichText from "../components/RichText";
 import {
   handleCommentNotification,
   handleLikeNotification,
+  handleReplyNotification,
 } from "../lib/notifications";
 import { timeAgo } from "../lib/timeAgo";
 
@@ -28,6 +29,10 @@ export default function PostDetailPage() {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [kbHeight, setKbHeight] = useState(0);
+  // reply state — null means we're in comment mode
+  const [replyTarget, setReplyTarget] = useState(null); // { commentId, commentOwnerId, username }
+  const fetchRepliesRef = useRef({});
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const vv = window.visualViewport;
@@ -114,26 +119,55 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleAddComment = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const text = commentText.trim();
     if (!text) return;
     setCommentText("");
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      user_id: user.id,
-      content: text,
-    });
-    if (error) {
-      setCommentText(text);
+
+    const actorUsername =
+      user.user_metadata?.username ??
+      user.user_metadata?.full_name ??
+      user.email ??
+      "Someone";
+
+    if (replyTarget) {
+      // ── Submit reply ──
+      const payload = {
+        comment_id: replyTarget.commentId,
+        user_id: user.id,
+        content: text,
+        replied_to_username: replyTarget.username,
+      };
+      const { error } = await supabase.from("comment_replies").insert(payload);
+      if (error) {
+        setCommentText(text);
+        return;
+      }
+      // refresh replies on that comment
+      fetchRepliesRef.current[replyTarget.commentId]?.({ show: true });
+      setReplyTarget(null);
+      if (replyTarget.commentOwnerId !== user.id) {
+        handleReplyNotification({
+          postId,
+          replyOwnerId: replyTarget.commentOwnerId,
+          actorId: user.id,
+          actorUsername,
+        });
+      }
     } else {
+      // ── Submit comment ──
+      const { error } = await supabase.from("comments").insert({
+        post_id: postId,
+        user_id: user.id,
+        content: text,
+      });
+      if (error) {
+        setCommentText(text);
+        return;
+      }
       fetchComments();
-      if (post?.user_id) {
-        const actorUsername =
-          user.user_metadata?.username ??
-          user.user_metadata?.full_name ??
-          user.email ??
-          "Someone";
+      if (post?.user_id && post.user_id !== user.id) {
         handleCommentNotification({
           postId,
           postOwnerId: post.user_id,
@@ -142,6 +176,17 @@ export default function PostDetailPage() {
         });
       }
     }
+  };
+
+  const handleReply = (target) => {
+    setReplyTarget(target);
+    setCommentText("");
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const cancelReply = () => {
+    setReplyTarget(null);
+    setCommentText("");
   };
 
   const profile = post?.profiles;
@@ -240,7 +285,16 @@ export default function PostDetailPage() {
               </p>
             ) : (
               comments.map((c) => (
-                <CommentItem key={c.id} comment={c} postId={postId} />
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  postId={postId}
+                  onReply={handleReply}
+                  replyTarget={replyTarget}
+                  onRegisterFetch={(fn) => {
+                    fetchRepliesRef.current[c.id] = fn;
+                  }}
+                />
               ))
             )}
           </div>
@@ -251,16 +305,36 @@ export default function PostDetailPage() {
         className="fixed bottom-0 left-0 right-0 bg-[#0B0B0F] border-t border-gray-800 px-4 py-3 z-20 transition-all duration-200"
         style={{ bottom: kbHeight }}
       >
+        {/* Reply context pill */}
+        {replyTarget && (
+          <div className="max-w-2xl mx-auto flex items-center justify-between mb-2 px-1">
+            <span className="text-purple-400 text-xs">
+              Replying to{" "}
+              <span className="font-semibold">{replyTarget.username}</span>
+            </span>
+            <button
+              onClick={cancelReply}
+              className="text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Avatar src={userAvatar} size={32} />
           <form
-            onSubmit={handleAddComment}
+            onSubmit={handleSubmit}
             className="flex-1 flex items-center gap-2"
           >
             <input
+              ref={inputRef}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Add a comment..."
+              placeholder={
+                replyTarget
+                  ? `Reply to ${replyTarget.username}...`
+                  : "Add a comment..."
+              }
               className="flex-1 bg-[#121218] text-gray-200 rounded-full px-4 py-2.5 text-sm outline-none border border-gray-800 focus:border-purple-700 transition-colors placeholder-gray-600"
             />
             <button type="submit" className="shrink-0">

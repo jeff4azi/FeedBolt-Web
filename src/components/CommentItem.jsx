@@ -1,22 +1,50 @@
-import { useEffect, useState } from "react";
-import {
-  Heart,
-  MessageCircle,
-  Send,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Heart, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import Avatar from "./Avatar";
 import RichText from "./RichText";
-import { handleReplyNotification } from "../lib/notifications";
 import { timeAgo } from "../lib/timeAgo";
 
-function ReplyItem({ reply, onReply }) {
+function ReplyItem({ reply, onReply, currentUser }) {
   const profile = reply.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
   const repliedTo = reply.replied_to_username;
+
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    supabase
+      .from("comment_reply_likes")
+      .select("user_id", { count: "exact" })
+      .eq("reply_id", reply.id)
+      .then(({ data, count, error }) => {
+        if (error) return; // table may not exist yet
+        setLikeCount(count ?? 0);
+        setLiked(data?.some((l) => l.user_id === currentUser.id) ?? false);
+      });
+  }, [reply.id, currentUser]);
+
+  const handleLike = async () => {
+    if (!currentUser) return;
+    if (liked) {
+      setLiked(false);
+      setLikeCount((c) => c - 1);
+      await supabase
+        .from("comment_reply_likes")
+        .delete()
+        .eq("reply_id", reply.id)
+        .eq("user_id", currentUser.id);
+    } else {
+      setLiked(true);
+      setLikeCount((c) => c + 1);
+      await supabase
+        .from("comment_reply_likes")
+        .insert({ reply_id: reply.id, user_id: currentUser.id });
+    }
+  };
 
   return (
     <div className="flex mt-3">
@@ -40,19 +68,36 @@ function ReplyItem({ reply, onReply }) {
           text={reply.content}
           className="text-gray-300 text-xs leading-5"
         />
-        <button
-          onClick={() => onReply(username)}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs mt-1 transition-colors"
-        >
-          <MessageCircle size={11} />
-          Reply
-        </button>
+        <div className="flex items-center gap-3 mt-1.5">
+          <button onClick={handleLike} className="flex items-center gap-1">
+            <Heart
+              size={11}
+              fill={liked ? "#a855f7" : "none"}
+              color={liked ? "#a855f7" : "#6b7280"}
+            />
+            {likeCount > 0 && (
+              <span className="text-gray-600 text-xs">{likeCount}</span>
+            )}
+          </button>
+          <button
+            onClick={() => onReply(username)}
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs transition-colors"
+          >
+            <MessageCircle size={11} />
+            Reply
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-export default function CommentItem({ comment, postId }) {
+export default function CommentItem({
+  comment,
+  onReply,
+  replyTarget,
+  onRegisterFetch,
+}) {
   const { user } = useAuth();
   const profile = comment.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
@@ -62,9 +107,7 @@ export default function CommentItem({ comment, postId }) {
   const [likeCount, setLikeCount] = useState(0);
   const [replies, setReplies] = useState([]);
   const [showReplies, setShowReplies] = useState(false);
-  const [replying, setReplying] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [replyingTo, setReplyingTo] = useState(null);
+  const [repliesLoaded, setRepliesLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -78,17 +121,30 @@ export default function CommentItem({ comment, postId }) {
       });
   }, [comment.id, user]);
 
-  const fetchReplies = async () => {
-    const { data } = await supabase
+  const fetchReplies = useCallback(async () => {
+    const { data, error } = await supabase
       .from("comment_replies")
-      .select("*, profiles(id, fullname, username, avatar_url)")
+      .select(
+        "*, profiles!comment_replies_user_id_fkey(id, fullname, username, avatar_url)",
+      )
       .eq("comment_id", comment.id)
       .order("created_at", { ascending: true });
-    if (data) setReplies(data);
-  };
+    if (data) {
+      setReplies(data);
+      setRepliesLoaded(true);
+    }
+  }, [comment.id]);
+
+  useEffect(() => {
+    if (!onRegisterFetch) return;
+    onRegisterFetch((opts) => {
+      fetchReplies();
+      if (opts?.show) setShowReplies(true);
+    });
+  }, [onRegisterFetch, fetchReplies]);
 
   const handleToggleReplies = async () => {
-    if (!showReplies && replies.length === 0) await fetchReplies();
+    if (!showReplies && !repliesLoaded) await fetchReplies();
     setShowReplies((v) => !v);
   };
 
@@ -111,48 +167,7 @@ export default function CommentItem({ comment, postId }) {
     }
   };
 
-  const openReply = (targetUsername) => {
-    setReplyingTo(targetUsername);
-    setReplying(true);
-  };
-
-  const handleReplySubmit = async (e) => {
-    e.preventDefault();
-    const text = replyText.trim();
-    if (!text) return;
-    setReplyText("");
-
-    const payload = {
-      comment_id: comment.id,
-      user_id: user.id,
-      content: text,
-    };
-    if (replyingTo) payload.replied_to_username = replyingTo;
-
-    const { error } = await supabase.from("comment_replies").insert(payload);
-    if (error) {
-      setReplyText(text);
-    } else {
-      await fetchReplies();
-      setShowReplies(true);
-      setReplying(false);
-      setReplyingTo(null);
-      // notify the comment owner
-      if (comment.user_id !== user.id) {
-        const actorUsername =
-          user.user_metadata?.username ??
-          user.user_metadata?.full_name ??
-          user.email ??
-          "Someone";
-        handleReplyNotification({
-          postId,
-          replyOwnerId: comment.user_id,
-          actorId: user.id,
-          actorUsername,
-        });
-      }
-    }
-  };
+  const isReplying = replyTarget?.commentId === comment.id;
 
   return (
     <div className="flex mb-4">
@@ -182,11 +197,21 @@ export default function CommentItem({ comment, postId }) {
             )}
           </button>
           <button
-            onClick={() => openReply(username)}
-            className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-xs transition-colors"
+            onClick={() =>
+              onReply({
+                commentId: comment.id,
+                commentOwnerId: comment.user_id,
+                username,
+              })
+            }
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              isReplying
+                ? "text-purple-400"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
           >
             <MessageCircle size={13} />
-            Reply
+            {isReplying ? "Replying..." : "Reply"}
           </button>
           {(replies.length > 0 || comment.reply_count > 0) && (
             <button
@@ -200,39 +225,32 @@ export default function CommentItem({ comment, postId }) {
               )}
               {showReplies
                 ? "Hide"
-                : `${replies.length || comment.reply_count} repl${(replies.length || comment.reply_count) === 1 ? "y" : "ies"}`}
+                : `${replies.length || comment.reply_count} repl${
+                    (replies.length || comment.reply_count) === 1 ? "y" : "ies"
+                  }`}
             </button>
           )}
         </div>
 
-        {/* Reply input */}
-        {replying && (
-          <form
-            onSubmit={handleReplySubmit}
-            className="flex items-center gap-2 mt-2"
-          >
-            <Avatar src={user?.user_metadata?.avatar_url} size={24} />
-            <input
-              autoFocus
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder={`Reply to ${replyingTo ?? username}...`}
-              className="flex-1 bg-[#121218] text-gray-200 rounded-full px-3 py-1.5 text-xs outline-none border border-gray-800 focus:border-purple-700 transition-colors placeholder-gray-600"
-            />
-            <button type="submit" className="shrink-0">
-              <Send
-                size={14}
-                color={replyText.trim() ? "#a855f7" : "#374151"}
-              />
-            </button>
-          </form>
-        )}
-
         {/* Replies list */}
         {showReplies &&
           replies.map((r) => (
-            <ReplyItem key={r.id} reply={r} onReply={openReply} />
+            <ReplyItem
+              key={r.id}
+              reply={r}
+              currentUser={user}
+              onReply={(targetUsername) =>
+                onReply({
+                  commentId: comment.id,
+                  commentOwnerId: comment.user_id,
+                  username: targetUsername,
+                })
+              }
+            />
           ))}
+        {showReplies && repliesLoaded && replies.length === 0 && (
+          <p className="text-gray-600 text-xs px-1 mt-2">No replies yet.</p>
+        )}
       </div>
     </div>
   );
