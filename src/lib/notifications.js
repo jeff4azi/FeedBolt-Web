@@ -48,7 +48,7 @@ export async function requestNotificationPermission(userId) {
       .from("push_subscriptions")
       .upsert(
         { user_id: userId, subscription: subscription.toJSON() },
-        { onConflict: "user_id,subscription" },
+        { onConflict: "user_id" },
       );
   } catch (err) {
     console.error("Push subscription failed:", err);
