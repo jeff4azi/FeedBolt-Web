@@ -24,16 +24,18 @@ self.skipWaiting();
 self.clients.claim();
 
 // ── Push notifications ────────────────────────────────────────────────────
-self.addEventListener("message", (e) => {
-  if (e.data?.type !== "SHOW_NOTIFICATION") return;
-  const { title, body, url } = e.data;
-  self.registration.showNotification(title, {
-    body,
-    icon: "/FeedBolt.jpg",
-    badge: "/FeedBolt.jpg",
-    data: { url },
-    vibrate: [100, 50, 100],
-  });
+self.addEventListener("push", (e) => {
+  const data = e.data?.json() ?? {};
+  const { title = "FeedBolt", body = "", url = "/notifications" } = data;
+  e.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/FeedBolt.jpg",
+      badge: "/FeedBolt.jpg",
+      data: { url },
+      vibrate: [100, 50, 100],
+    }),
+  );
 });
 
 self.addEventListener("notificationclick", (e) => {

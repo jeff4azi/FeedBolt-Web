@@ -125,7 +125,7 @@ export default function NotificationsPage() {
   };
 
   const handleEnablePush = async () => {
-    const result = await requestNotificationPermission();
+    const result = await requestNotificationPermission(user?.id);
     setPermState(result);
   };
 
