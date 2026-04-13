@@ -16,6 +16,10 @@ export default defineConfig({
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,jpg,png,svg,woff2}"],
       },
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
       manifest: {
         name: "FeedBolt",
         short_name: "FeedBolt",

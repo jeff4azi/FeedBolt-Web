@@ -115,7 +115,7 @@ export async function handleCommentNotification({
     actorUsername,
     message,
   });
-  sendPushToUser(postOwnerId, "FeedBolt 💬", message, `/post/${postId}`);
+  sendPushToUser(postOwnerId, "FeedBolt", message, `/post/${postId}`);
 }
 
 // ── Called after a reply is added ────────────────────────────────────────
