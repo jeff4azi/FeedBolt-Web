@@ -1,61 +1,6 @@
 import { supabase } from "./supabase";
 
 const LIKE_MILESTONES = [5, 10, 25, 50, 100, 250, 500, 1000];
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-const BASE_URL = import.meta.env.VITE_BASE_URL;
-
-// ── Send push via backend ─────────────────────────────────────────────────
-async function sendPushToUser(userId, title, body, url = "/notifications") {
-  try {
-    await fetch(`${BASE_URL}/send-push`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, title, body, url }),
-    });
-  } catch (err) {
-    console.error("Push send failed:", err);
-  }
-}
-
-// ── Convert VAPID key to Uint8Array ───────────────────────────────────────
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-}
-
-// ── Request permission + save subscription to DB ──────────────────────────
-export async function requestNotificationPermission(userId) {
-  if (!("Notification" in window) || !("serviceWorker" in navigator))
-    return "unsupported";
-  if (Notification.permission === "denied") return "denied";
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return permission;
-
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    const subscription =
-      existing ??
-      (await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      }));
-
-    await supabase
-      .from("push_subscriptions")
-      .upsert(
-        { user_id: userId, subscription: subscription.toJSON() },
-        { onConflict: "user_id" },
-      );
-  } catch (err) {
-    console.error("Push subscription failed:", err);
-  }
-
-  return "granted";
-}
 
 // ── Insert a notification row ─────────────────────────────────────────────
 async function insertNotification({
@@ -94,7 +39,6 @@ export async function handleLikeNotification({
     actorId: currentUserId,
     message,
   });
-  sendPushToUser(postOwnerId, "FeedBolt 🎉", message, `/post/${postId}`);
 }
 
 // ── Called after a comment is added ──────────────────────────────────────
@@ -115,7 +59,6 @@ export async function handleCommentNotification({
     actorUsername,
     message,
   });
-  sendPushToUser(postOwnerId, "FeedBolt", message, `/post/${postId}`);
 }
 
 // ── Called after a reply is added ────────────────────────────────────────
@@ -136,5 +79,8 @@ export async function handleReplyNotification({
     actorUsername,
     message,
   });
-  sendPushToUser(replyOwnerId, "FeedBolt 💬", message, `/post/${postId}`);
+}
+
+export async function requestNotificationPermission() {
+  return "unsupported";
 }

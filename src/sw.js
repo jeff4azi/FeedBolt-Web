@@ -1,16 +1,39 @@
-// ── Push notifications ────────────────────────────────────────────────────
-self.addEventListener("push", (e) => {
-  const data = e.data?.json() ?? {};
-  const { title = "FeedBolt", body = "", url = "/notifications" } = data;
-  e.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/FeedBolt.jpg",
-      badge: "/FeedBolt.jpg",
-      data: { url },
-      vibrate: [100, 50, 100],
-    }),
-  );
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
+import { NavigationRoute, registerRoute } from "workbox-routing";
+import { NetworkFirst, CacheFirst } from "workbox-strategies";
+
+// Injected by vite-plugin-pwa at build time
+precacheAndRoute(self.__WB_MANIFEST);
+cleanupOutdatedCaches();
+
+// Navigation: network-first, fall back to cached index for offline SPA routing
+registerRoute(
+  new NavigationRoute(new NetworkFirst({ cacheName: "feedbolt-navigation" })),
+);
+
+// Static assets: cache-first
+registerRoute(
+  ({ request }) =>
+    request.destination === "style" ||
+    request.destination === "script" ||
+    request.destination === "image",
+  new CacheFirst({ cacheName: "feedbolt-assets" }),
+);
+
+self.skipWaiting();
+self.clients.claim();
+
+// ── In-app notification → browser notification ────────────────────────────
+self.addEventListener("message", (e) => {
+  if (e.data?.type !== "SHOW_NOTIFICATION") return;
+  const { title, body, url = "/notifications" } = e.data;
+  self.registration.showNotification(title, {
+    body,
+    icon: "/FeedBolt.jpg",
+    badge: "/FeedBolt.jpg",
+    data: { url },
+    vibrate: [100, 50, 100],
+  });
 });
 
 self.addEventListener("notificationclick", (e) => {

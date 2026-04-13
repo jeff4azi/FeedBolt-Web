@@ -2,6 +2,17 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+async function showBrowserNotification(message) {
+  if (Notification.permission !== "granted") return;
+  const sw = await navigator.serviceWorker?.ready;
+  sw?.active?.postMessage({
+    type: "SHOW_NOTIFICATION",
+    title: "FeedBolt",
+    body: message,
+    url: "/notifications",
+  });
+}
+
 export function useUnreadCount() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -30,7 +41,10 @@ export function useUnreadCount() {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => setCount((prev) => prev + 1),
+        (payload) => {
+          setCount((prev) => prev + 1);
+          showBrowserNotification(payload.new?.message ?? "New notification");
+        },
       )
       .on(
         "postgres_changes",

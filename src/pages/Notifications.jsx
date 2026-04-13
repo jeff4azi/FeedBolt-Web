@@ -9,8 +9,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
-import { requestNotificationPermission } from "../lib/notifications";
-import Avatar from "../components/Avatar";
 import { timeAgo } from "../lib/timeAgo";
 
 const TYPE_META = {
@@ -65,9 +63,6 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [permState, setPermState] = useState(
-    Notification?.permission ?? "default",
-  );
 
   const fetchNotifs = useCallback(async () => {
     const { data } = await supabase
@@ -124,11 +119,6 @@ export default function NotificationsPage() {
     setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  const handleEnablePush = async () => {
-    const result = await requestNotificationPermission(user?.id);
-    setPermState(result);
-  };
-
   const unreadCount = notifs.filter((n) => !n.read).length;
 
   return (
@@ -159,24 +149,6 @@ export default function NotificationsPage() {
           </button>
         )}
       </div>
-
-      {/* Push permission banner */}
-      {permState !== "granted" && permState !== "denied" && (
-        <div className="mx-4 mt-4 bg-purple-600/10 border border-purple-600/30 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Bell size={18} color="#a855f7" className="shrink-0" />
-            <p className="text-gray-300 text-sm">
-              Enable push notifications to stay in the loop
-            </p>
-          </div>
-          <button
-            onClick={handleEnablePush}
-            className="shrink-0 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Enable
-          </button>
-        </div>
-      )}
 
       {/* List */}
       <div className="mt-2">

@@ -31,6 +31,17 @@ function RootNavigator() {
     trackPageView(location.pathname + location.search);
   }, [location]);
 
+  // Request browser notification permission once user is logged in
+  useEffect(() => {
+    if (
+      session &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+  }, [session]);
+
   useEffect(() => {
     if (loading) return;
     const inAuth = location.pathname === "/auth";
