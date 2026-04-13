@@ -17,6 +17,7 @@ import CreatePostPage from "./pages/CreatePost";
 import UserProfilePage from "./pages/UserProfile";
 import EditProfilePage from "./pages/EditProfile";
 import EditPostPage from "./pages/EditPost";
+import SearchPage from "./pages/Search";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
@@ -43,6 +44,7 @@ function RootNavigator() {
       <Route path="/auth" element={<AuthPage />} />
       <Route element={<Layout />}>
         <Route path="/feed" element={<FeedPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
       <Route path="/post/:postId" element={<PostDetailPage />} />

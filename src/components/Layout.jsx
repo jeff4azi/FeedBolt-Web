@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, User, Plus } from "lucide-react";
+import { Home, User, Plus, Search } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
 
@@ -31,6 +31,10 @@ export default function Layout() {
           <NavLink to="/feed" className={navItem}>
             <Home size={19} />
             Feed
+          </NavLink>
+          <NavLink to="/search" className={navItem}>
+            <Search size={19} />
+            Search
           </NavLink>
           <NavLink to="/profile" className={navItem}>
             <User size={19} />
@@ -81,6 +85,17 @@ export default function Layout() {
         >
           <Home size={22} />
           Feed
+        </NavLink>
+        <NavLink
+          to="/search"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 flex-1 text-xs font-medium transition-colors ${
+              isActive ? "text-purple-400" : "text-gray-500"
+            }`
+          }
+        >
+          <Search size={22} />
+          Search
         </NavLink>
         <NavLink
           to="/profile"
