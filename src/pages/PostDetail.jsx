@@ -14,6 +14,7 @@ import {
   handleCommentNotification,
   handleLikeNotification,
 } from "../lib/notifications";
+import { timeAgo } from "../lib/timeAgo";
 
 export default function PostDetailPage() {
   const navigate = useNavigate();
@@ -185,7 +186,7 @@ export default function PostDetailPage() {
                 <div className="ml-3">
                   <p className="text-white font-semibold">{username}</p>
                   <p className="text-gray-500 text-xs">
-                    {new Date(post.created_at).toLocaleDateString()}
+                    {timeAgo(post.created_at)}
                   </p>
                 </div>
               </div>

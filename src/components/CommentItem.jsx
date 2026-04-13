@@ -11,6 +11,7 @@ import { supabase } from "../lib/supabase";
 import Avatar from "./Avatar";
 import RichText from "./RichText";
 import { handleReplyNotification } from "../lib/notifications";
+import { timeAgo } from "../lib/timeAgo";
 
 function ReplyItem({ reply, onReply }) {
   const profile = reply.profiles;
@@ -32,7 +33,7 @@ function ReplyItem({ reply, onReply }) {
             )}
           </div>
           <span className="text-gray-600 text-xs">
-            {new Date(reply.created_at).toLocaleDateString()}
+            {timeAgo(reply.created_at)}
           </span>
         </div>
         <RichText
@@ -55,7 +56,7 @@ export default function CommentItem({ comment, postId }) {
   const { user } = useAuth();
   const profile = comment.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
-  const timestamp = new Date(comment.created_at).toLocaleDateString();
+  const timestamp = timeAgo(comment.created_at);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);

@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { requestNotificationPermission } from "../lib/notifications";
 import Avatar from "../components/Avatar";
+import { timeAgo } from "../lib/timeAgo";
 
 const TYPE_META = {
   like_milestone: { icon: Heart, color: "text-pink-400", bg: "bg-pink-500/10" },
@@ -25,7 +26,7 @@ const TYPE_META = {
 function NotifRow({ notif, onClick }) {
   const meta = TYPE_META[notif.type] ?? TYPE_META.comment;
   const Icon = meta.icon;
-  const timeAgo = formatTimeAgo(notif.created_at);
+  const timeStr = timeAgo(notif.created_at);
 
   return (
     <button
@@ -48,7 +49,7 @@ function NotifRow({ notif, onClick }) {
         >
           {notif.message}
         </p>
-        <p className="text-gray-600 text-xs mt-0.5">{timeAgo}</p>
+        <p className="text-gray-600 text-xs mt-0.5">{timeStr}</p>
       </div>
 
       {/* Unread dot */}
@@ -57,18 +58,6 @@ function NotifRow({ notif, onClick }) {
       )}
     </button>
   );
-}
-
-function formatTimeAgo(iso) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString();
 }
 
 export default function NotificationsPage() {

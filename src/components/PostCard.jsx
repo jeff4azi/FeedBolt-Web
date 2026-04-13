@@ -15,6 +15,7 @@ import {
   getPlaceholderUrl,
   deletePostImage,
 } from "../lib/imageUtils";
+import { timeAgo } from "../lib/timeAgo";
 import Avatar from "./Avatar";
 import ConfirmDialog from "./ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
@@ -116,7 +117,7 @@ export default function PostCard({
   const { user } = useAuth();
   const profile = post.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
-  const timestamp = new Date(post.created_at).toLocaleDateString();
+  const timestamp = timeAgo(post.created_at);
   const imageUri400 = post.image_url
     ? getOptimizedImageUrl(post.image_url, { width: "w_400" })
     : null;
