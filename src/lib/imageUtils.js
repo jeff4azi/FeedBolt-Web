@@ -20,7 +20,51 @@ export function getPlaceholderUrl(url) {
   });
 }
 
+const MAX_DIMENSION = 1920;
+const COMPRESS_QUALITY = 0.82;
+
+async function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+
+      // Scale down if larger than MAX_DIMENSION
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width >= height) {
+          height = Math.round((height / width) * MAX_DIMENSION);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width / height) * MAX_DIMENSION);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("Canvas compression failed."));
+          resolve(blob);
+        },
+        "image/jpeg",
+        COMPRESS_QUALITY,
+      );
+    };
+    img.onerror = () =>
+      reject(new Error("Failed to load image for compression."));
+    img.src = objectUrl;
+  });
+}
+
 export async function uploadImageFile(file) {
+  const compressed = await compressImage(file);
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -31,8 +75,8 @@ export async function uploadImageFile(file) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             file: base64,
-            mimeType: file.type,
-            fileName: file.name,
+            mimeType: "image/jpeg",
+            fileName: file.name.replace(/\.[^.]+$/, ".jpg"),
           }),
         });
         const data = await res.json();
@@ -46,7 +90,7 @@ export async function uploadImageFile(file) {
       }
     };
     reader.onerror = () => reject(new Error("Failed to read file."));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(compressed);
   });
 }
 
