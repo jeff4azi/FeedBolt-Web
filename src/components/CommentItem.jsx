@@ -10,20 +10,37 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import Avatar from "./Avatar";
 
-function ReplyItem({ reply }) {
+function ReplyItem({ reply, onReply }) {
   const profile = reply.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
+  const repliedTo = reply.replied_to_username;
+
   return (
     <div className="flex mt-3">
       <Avatar src={profile?.avatar_url} size={26} className="mt-0.5 shrink-0" />
       <div className="ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2">
         <div className="flex items-center justify-between mb-0.5">
-          <span className="text-white font-semibold text-xs">{username}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-white font-semibold text-xs">{username}</span>
+            {repliedTo && (
+              <>
+                <span className="text-gray-600 text-xs">›</span>
+                <span className="text-purple-400 text-xs">{repliedTo}</span>
+              </>
+            )}
+          </div>
           <span className="text-gray-600 text-xs">
             {new Date(reply.created_at).toLocaleDateString()}
           </span>
         </div>
         <p className="text-gray-300 text-xs leading-5">{reply.content}</p>
+        <button
+          onClick={() => onReply(username)}
+          className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs mt-1 transition-colors"
+        >
+          <MessageCircle size={11} />
+          Reply
+        </button>
       </div>
     </div>
   );
@@ -41,6 +58,7 @@ export default function CommentItem({ comment }) {
   const [showReplies, setShowReplies] = useState(false);
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -87,22 +105,32 @@ export default function CommentItem({ comment }) {
     }
   };
 
+  const openReply = (targetUsername) => {
+    setReplyingTo(targetUsername);
+    setReplying(true);
+  };
+
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     const text = replyText.trim();
     if (!text) return;
     setReplyText("");
-    const { error } = await supabase.from("comment_replies").insert({
+
+    const payload = {
       comment_id: comment.id,
       user_id: user.id,
       content: text,
-    });
+    };
+    if (replyingTo) payload.replied_to_username = replyingTo;
+
+    const { error } = await supabase.from("comment_replies").insert(payload);
     if (error) {
       setReplyText(text);
     } else {
       await fetchReplies();
       setShowReplies(true);
       setReplying(false);
+      setReplyingTo(null);
     }
   };
 
@@ -131,7 +159,7 @@ export default function CommentItem({ comment }) {
             )}
           </button>
           <button
-            onClick={() => setReplying((v) => !v)}
+            onClick={() => openReply(username)}
             className="flex items-center gap-1 text-gray-500 hover:text-gray-300 text-xs transition-colors"
           >
             <MessageCircle size={13} />
@@ -165,7 +193,7 @@ export default function CommentItem({ comment }) {
               autoFocus
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              placeholder={`Reply to ${username}...`}
+              placeholder={`Reply to ${replyingTo ?? username}...`}
               className="flex-1 bg-[#121218] text-gray-200 rounded-full px-3 py-1.5 text-xs outline-none border border-gray-800 focus:border-purple-700 transition-colors placeholder-gray-600"
             />
             <button type="submit" className="shrink-0">
@@ -178,7 +206,10 @@ export default function CommentItem({ comment }) {
         )}
 
         {/* Replies list */}
-        {showReplies && replies.map((r) => <ReplyItem key={r.id} reply={r} />)}
+        {showReplies &&
+          replies.map((r) => (
+            <ReplyItem key={r.id} reply={r} onReply={openReply} />
+          ))}
       </div>
     </div>
   );
