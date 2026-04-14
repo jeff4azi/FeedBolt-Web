@@ -217,6 +217,7 @@ export default function PostCard({
       </div>
 
       <RichText
+        hashtags
         text={post.content}
         className="text-gray-200 text-sm leading-5 mb-4 whitespace-pre-wrap"
       />

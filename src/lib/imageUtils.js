@@ -20,8 +20,19 @@ export function getPlaceholderUrl(url) {
   });
 }
 
+export function getOptimizedAvatarUrl(url, size = 96) {
+  if (!url || !url.includes("res.cloudinary.com")) return url;
+  return getOptimizedImageUrl(url, {
+    format: "f_auto",
+    quality: "q_auto:good",
+    width: `w_${size * 2}`, // 2x for retina
+    crop: "c_fill,g_face",
+  });
+}
+
 const MAX_DIMENSION = 1920;
 const COMPRESS_QUALITY = 0.82;
+const AVATAR_SIZE = 400; // square crop, plenty sharp at 96px display size
 
 async function compressImage(file) {
   return new Promise((resolve, reject) => {
@@ -62,9 +73,68 @@ async function compressImage(file) {
   });
 }
 
+async function compressAvatar(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = AVATAR_SIZE;
+      canvas.height = AVATAR_SIZE;
+      canvas
+        .getContext("2d")
+        .drawImage(img, sx, sy, size, size, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("Avatar compression failed."));
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.88,
+      );
+    };
+    img.onerror = () => reject(new Error("Failed to load image."));
+    img.src = objectUrl;
+  });
+}
+
+export async function uploadAvatarFile(file) {
+  const compressed = await compressAvatar(file);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(",")[1];
+        const res = await fetch(`${BASE_URL}/upload-image`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            file: base64,
+            mimeType: "image/jpeg",
+            fileName: "avatar.jpg",
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Avatar upload failed.");
+        resolve({
+          image_url: data.image_url,
+          image_public_id: data.image_public_id,
+        });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error("Failed to read file."));
+    reader.readAsDataURL(compressed);
+  });
+}
+
 export async function uploadImageFile(file) {
   const compressed = await compressImage(file);
-
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async (e) => {

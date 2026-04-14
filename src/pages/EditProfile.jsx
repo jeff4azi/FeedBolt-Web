@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, Camera } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
-import { uploadImageFile, deleteAvatarImage } from "../lib/imageUtils";
+import { uploadAvatarFile, deleteAvatarImage } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
 import { trackEvent } from "../lib/analytics";
 
@@ -72,7 +72,7 @@ export default function EditProfilePage() {
         if (hasExistingAvatar) {
           await deleteAvatarImage(user.id).catch(() => {}); // non-fatal
         }
-        const uploaded = await uploadImageFile(pickedFile);
+        const uploaded = await uploadAvatarFile(pickedFile);
         newAvatarUrl = uploaded.image_url;
         newAvatarPublicId = uploaded.image_public_id;
       }

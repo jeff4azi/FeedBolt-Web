@@ -73,7 +73,10 @@ function SectionHeader({ icon: Icon, label }) {
 export default function SearchPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("q") ?? "";
+  });
   const [tab, setTab] = useState("top"); // top | people | posts
   const [loading, setLoading] = useState(false);
   const [trendingTags, setTrendingTags] = useState([]);

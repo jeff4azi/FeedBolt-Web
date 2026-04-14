@@ -1,8 +1,26 @@
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
-// Matches phone numbers: optional +, then digits/spaces/dashes/dots, 7–15 digits total
-const PHONE_REGEX = /(\+?[\d][\d\s\-\.]{5,18}[\d])/g;
+import { useNavigate } from "react-router-dom";
 
-function renderPart(part, i) {
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+const PHONE_REGEX = /(\+?[\d][\d\s\-\.]{5,18}[\d])/g;
+const HASHTAG_REGEX = /(#\w+)/g;
+
+function HashtagLink({ tag }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(`/search?q=${encodeURIComponent(tag)}`);
+      }}
+      className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
+    >
+      {tag}
+    </button>
+  );
+}
+
+function renderPart(part, i, hashtags) {
+  // URLs
   if (URL_REGEX.test(part)) {
     return (
       <a
@@ -18,7 +36,7 @@ function renderPart(part, i) {
     );
   }
 
-  // Split by phone numbers
+  // Split remaining text by phone numbers first, then hashtags
   const phoneParts = part.split(PHONE_REGEX);
   return phoneParts.map((p, j) => {
     const digits = p.replace(/\D/g, "");
@@ -34,17 +52,32 @@ function renderPart(part, i) {
         </a>
       );
     }
+
+    // Hashtags — only if enabled
+    if (hashtags) {
+      const hashParts = p.split(HASHTAG_REGEX);
+      return hashParts.map((h, k) =>
+        HASHTAG_REGEX.test(h) ? (
+          <HashtagLink key={`${i}-${j}-${k}`} tag={h} />
+        ) : (
+          h
+        ),
+      );
+    }
+
     return p;
   });
 }
 
-export default function RichText({ text, className }) {
+export default function RichText({ text, className, hashtags = false }) {
   if (!text) return <p className={className} />;
-  // Reset regex state
   URL_REGEX.lastIndex = 0;
+  HASHTAG_REGEX.lastIndex = 0;
   const parts = text.split(URL_REGEX);
 
   return (
-    <p className={className}>{parts.map((part, i) => renderPart(part, i))}</p>
+    <p className={className}>
+      {parts.map((part, i) => renderPart(part, i, hashtags))}
+    </p>
   );
 }

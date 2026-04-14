@@ -1,11 +1,12 @@
 import { User } from "lucide-react";
+import { getOptimizedAvatarUrl } from "../lib/imageUtils";
 
 export default function Avatar({ src, size = 40, className = "" }) {
   const style = { width: size, height: size, minWidth: size };
   if (src) {
     return (
       <img
-        src={src}
+        src={getOptimizedAvatarUrl(src, size)}
         alt="avatar"
         className={`rounded-full object-cover ${className}`}
         style={style}

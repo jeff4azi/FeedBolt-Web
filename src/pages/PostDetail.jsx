@@ -242,6 +242,7 @@ export default function PostDetailPage() {
                 </div>
               </div>
               <RichText
+                hashtags
                 text={post.content}
                 className="text-gray-200 text-base leading-6 mb-4 whitespace-pre-wrap"
               />
