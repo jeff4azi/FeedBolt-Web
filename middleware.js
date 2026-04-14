@@ -1,16 +1,9 @@
-import { NextResponse } from "next/server";
-
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SITE_URL = "https://feedbolt-beige.vercel.app";
 
-// Bot/crawler user agents
 const BOT_REGEX =
   /bot|crawl|slurp|spider|mediapartners|facebookexternalhit|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot|iframely|embedly|preview/i;
-
-function isCrawler(userAgent) {
-  return BOT_REGEX.test(userAgent ?? "");
-}
 
 function escapeHtml(str) {
   return (str ?? "")
@@ -33,15 +26,13 @@ async function fetchPost(postId) {
   return data?.[0] ?? null;
 }
 
-export async function middleware(request) {
-  const { pathname } = request.nextUrl;
-
-  // Only handle /post/:id routes
-  const match = pathname.match(/^\/post\/([a-f0-9-]{36})$/i);
-  if (!match) return NextResponse.next();
+export default async function middleware(request) {
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/post\/([a-f0-9-]{36})$/i);
+  if (!match) return;
 
   const userAgent = request.headers.get("user-agent") ?? "";
-  if (!isCrawler(userAgent)) return NextResponse.next();
+  if (!BOT_REGEX.test(userAgent)) return;
 
   const postId = match[1];
   const post = await fetchPost(postId);
@@ -62,8 +53,6 @@ export async function middleware(request) {
     <meta charset="UTF-8" />
     <title>${title}</title>
     <meta name="description" content="${description}" />
-
-    <!-- Open Graph -->
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="FeedBolt" />
     <meta property="og:url" content="${postUrl}" />
@@ -72,27 +61,19 @@ export async function middleware(request) {
     <meta property="og:image" content="${escapeHtml(image)}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${escapeHtml(image)}" />
-
-    <!-- Redirect real users to the SPA -->
     <meta http-equiv="refresh" content="0;url=${postUrl}" />
   </head>
-  <body>
-    <p>Redirecting to <a href="${postUrl}">${title}</a>…</p>
-  </body>
+  <body><p>Redirecting to <a href="${postUrl}">${title}</a>…</p></body>
 </html>`;
 
-  return new NextResponse(html, {
+  return new Response(html, {
     status: 200,
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
 
-export const config = {
-  matcher: ["/post/:id*"],
-};
+export const config = { matcher: "/post/:id*" };
