@@ -26,6 +26,7 @@ export default function FeedPage() {
     const { data, error } = await supabase.rpc("get_scored_posts", {
       from_offset: 0,
       page_size: PAGE_SIZE,
+      current_user_id: user?.id ?? null,
     });
     if (!error) {
       const result = data ?? [];
@@ -43,6 +44,7 @@ export default function FeedPage() {
     const { data, error } = await supabase.rpc("get_scored_posts", {
       from_offset: from,
       page_size: PAGE_SIZE,
+      current_user_id: user?.id ?? null,
     });
     if (!error && data) {
       setPosts((p) => [...p, ...data]);
@@ -50,7 +52,7 @@ export default function FeedPage() {
       if (data.length < PAGE_SIZE) setExhausted(true);
     }
     setLoadingMore(false);
-  }, [loadingMore, exhausted]);
+  }, [loadingMore, exhausted, user]);
 
   useEffect(() => {
     fetchPosts();
