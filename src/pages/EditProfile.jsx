@@ -23,7 +23,7 @@ function Field({ label, inputClassName = "", ...props }) {
 
 export default function EditProfilePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setProfile } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -90,6 +90,11 @@ export default function EditProfilePage() {
         .update(updatePayload)
         .eq("id", user.id);
       if (error) throw error;
+      setProfile({
+        fullname: displayName.trim(),
+        username: username.trim(),
+        avatar_url: newAvatarUrl,
+      });
       trackEvent("Profile", "update", pickedFile ? "with_avatar" : "info_only");
       navigate(-1);
     } catch (err) {

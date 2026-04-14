@@ -16,7 +16,7 @@ let exhaustedCache = false;
 
 export default function FeedPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const [posts, setPosts] = useState(() => postsCache ?? []);
   const [loading, setLoading] = useState(postsCache === null);
@@ -123,7 +123,7 @@ export default function FeedPage() {
     });
   }, []);
 
-  const avatar = user?.user_metadata?.avatar_url;
+  const avatar = profile?.avatar_url ?? user?.user_metadata?.avatar_url;
 
   return (
     <div className="max-w-2xl mx-auto">

@@ -28,11 +28,22 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profile, setProfile] = useState(null);
   const channelRef = useRef(null);
+
+  const fetchProfile = async (userId) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, fullname, username, avatar_url")
+      .eq("id", userId)
+      .single();
+    if (data) setProfile(data);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user) fetchProfile(session.user.id);
       setLoading(false);
     });
 
@@ -40,6 +51,8 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user) fetchProfile(session.user.id);
+      else setProfile(null);
     });
 
     return () => subscription.unsubscribe();
@@ -132,6 +145,8 @@ export function AuthProvider({ children }) {
         loading,
         unreadCount,
         setUnreadCount,
+        profile,
+        setProfile,
         signInWithGoogle,
         signOut,
       }}
