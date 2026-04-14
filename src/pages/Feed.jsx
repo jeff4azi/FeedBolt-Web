@@ -23,13 +23,10 @@ export default function FeedPage() {
   const restoredRef = useRef(false);
 
   const fetchPosts = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select(
-        "*, profiles(id, fullname, username, avatar_url), comments(count)",
-      )
-      .order("created_at", { ascending: false })
-      .range(0, PAGE_SIZE - 1);
+    const { data, error } = await supabase.rpc("get_scored_posts", {
+      from_offset: 0,
+      page_size: PAGE_SIZE,
+    });
     if (!error) {
       const result = data ?? [];
       setPosts(result);
@@ -43,13 +40,10 @@ export default function FeedPage() {
     if (loadingMore || exhausted) return;
     setLoadingMore(true);
     const from = postsLengthRef.current;
-    const { data, error } = await supabase
-      .from("posts")
-      .select(
-        "*, profiles(id, fullname, username, avatar_url), comments(count)",
-      )
-      .order("created_at", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
+    const { data, error } = await supabase.rpc("get_scored_posts", {
+      from_offset: from,
+      page_size: PAGE_SIZE,
+    });
     if (!error && data) {
       setPosts((p) => [...p, ...data]);
       postsLengthRef.current = from + data.length;
