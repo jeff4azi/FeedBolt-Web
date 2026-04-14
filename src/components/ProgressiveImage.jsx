@@ -35,7 +35,6 @@ export default function ProgressiveImage({
         loading={loading}
         onLoad={() => setLoaded(true)}
         className={`w-full block rounded-xl transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
-        style={{ maxHeight: "inherit" }}
       />
     </div>
   );
