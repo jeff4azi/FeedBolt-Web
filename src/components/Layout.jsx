@@ -5,9 +5,9 @@ import Avatar from "./Avatar";
 import { useUnreadCount } from "../hooks/useNotifications";
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const avatar = user?.user_metadata?.avatar_url;
+  const avatar = profile?.avatar_url ?? user?.user_metadata?.avatar_url;
   const unread = useUnreadCount();
 
   const navItem = ({ isActive }) =>
@@ -72,7 +72,10 @@ export default function Layout() {
           <Avatar src={avatar} size={34} />
           <div className="text-left min-w-0">
             <p className="text-white text-xs font-semibold truncate">
-              {user?.user_metadata?.full_name ?? user?.email ?? "You"}
+              {profile?.fullname ??
+                user?.user_metadata?.full_name ??
+                user?.email ??
+                "You"}
             </p>
             <p className="text-gray-500 text-xs truncate">{user?.email}</p>
           </div>
