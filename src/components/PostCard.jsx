@@ -180,9 +180,7 @@ export default function PostCard({
     e.stopPropagation();
     const url = `${window.location.origin}/post/${post.id}`;
     if (navigator.share) {
-      try {
-        await navigator.share({ title: "FeedBolt post", url });
-      } catch (_) {}
+      navigator.share({ title: "FeedBolt post", url });
     } else {
       await navigator.clipboard?.writeText(url);
       setCopied(true);
