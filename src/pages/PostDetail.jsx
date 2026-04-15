@@ -21,7 +21,7 @@ import { trackEvent } from "../lib/analytics";
 export default function PostDetailPage() {
   const navigate = useNavigate();
   const { postId } = useParams();
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
@@ -204,7 +204,7 @@ export default function PostDetailPage() {
   const imageViewerUri = post?.image_url
     ? getOptimizedImageUrl(post.image_url, { width: "w_700" })
     : null;
-  const userAvatar = user?.user_metadata?.avatar_url;
+  const userAvatar = authProfile?.avatar_url ?? user?.user_metadata?.avatar_url;
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col min-h-screen">

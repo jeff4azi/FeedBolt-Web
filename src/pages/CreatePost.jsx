@@ -9,7 +9,7 @@ import { trackEvent } from "../lib/analytics";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [content, setContent] = useState("");
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -56,8 +56,9 @@ export default function CreatePostPage() {
     }
   };
 
-  const avatar = user?.user_metadata?.avatar_url;
-  const username = user?.user_metadata?.full_name ?? user?.email ?? "You";
+  const avatar = profile?.avatar_url ?? user?.user_metadata?.avatar_url;
+  const username =
+    profile?.fullname ?? user?.user_metadata?.full_name ?? user?.email ?? "You";
   const canPost = content.trim().length > 0 && !posting;
 
   return (
