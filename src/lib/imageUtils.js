@@ -20,7 +20,7 @@ export function getPlaceholderUrl(url) {
   });
 }
 
-export function getOptimizedAvatarUrl(url, size = 96) {
+export function getOptimizedAvatarUrl(url, size = 40) {
   if (!url || !url.includes("res.cloudinary.com")) return url;
   return getOptimizedImageUrl(url, {
     format: "f_auto",
