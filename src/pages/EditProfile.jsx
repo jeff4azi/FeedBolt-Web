@@ -72,7 +72,7 @@ export default function EditProfilePage() {
         if (hasExistingAvatar) {
           await deleteAvatarImage(user.id).catch(() => {}); // non-fatal
         }
-        const uploaded = await uploadAvatarFile(pickedFile);
+        const uploaded = await uploadAvatarFile(pickedFile, user.id);
         newAvatarUrl = uploaded.image_url;
         newAvatarPublicId = uploaded.image_public_id;
       }

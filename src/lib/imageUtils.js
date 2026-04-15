@@ -102,7 +102,7 @@ async function compressAvatar(file) {
   });
 }
 
-export async function uploadAvatarFile(file) {
+export async function uploadAvatarFile(file, userId) {
   const compressed = await compressAvatar(file);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -115,7 +115,7 @@ export async function uploadAvatarFile(file) {
           body: JSON.stringify({
             file: base64,
             mimeType: "image/jpeg",
-            fileName: "avatar.jpg",
+            fileName: `avatar_${userId}.jpg`,
           }),
         });
         const data = await res.json();
