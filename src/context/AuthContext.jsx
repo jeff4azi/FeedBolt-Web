@@ -7,13 +7,15 @@ async function showBrowserNotification(message) {
   if (!("Notification" in window) || Notification.permission !== "granted")
     return;
 
-  // If page is visible, use Notification API directly
-  if (document.visibilityState === "visible") {
+  // Android Chrome doesn't support new Notification() — always use SW
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  if (!isMobile && document.visibilityState === "visible") {
     new Notification("FeedBolt", { body: message, icon: "/FeedBolt.jpg" });
     return;
   }
 
-  // Page is hidden — use service worker
+  // Use service worker (required on Android, fallback when page is hidden)
   if (!("serviceWorker" in navigator)) return;
   const sw = await navigator.serviceWorker.ready;
   sw?.active?.postMessage({
