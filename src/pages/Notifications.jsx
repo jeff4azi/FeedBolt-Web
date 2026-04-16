@@ -78,6 +78,7 @@ export default function NotificationsPage() {
   }, [user]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchNotifs();
   }, [fetchNotifs]);
 

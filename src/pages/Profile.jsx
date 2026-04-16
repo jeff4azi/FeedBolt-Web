@@ -52,6 +52,7 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchData();
   }, [fetchData]);
 
