@@ -153,7 +153,7 @@ export default function SearchPage() {
   }, [query, runSearch]);
 
   const handleTagClick = (tag) => {
-    setQuery(`#${tag}`);
+    setQuery(`${tag}`);
     setTab("posts");
     inputRef.current?.focus();
   };
