@@ -130,7 +130,9 @@ export default function PostCard({
     : null;
   const isOwner = showOwnerActions && user?.id === post.user_id;
 
-  const [liked, setLiked] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const TRUNCATE_AT = 300;
+  const isLong = post.content?.length > TRUNCATE_AT;
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(
     post.comments?.[0]?.count ?? 0,
@@ -249,9 +251,24 @@ export default function PostCard({
 
       <RichText
         hashtags
-        text={post.content}
-        className="text-gray-200 text-sm leading-5 mb-4 whitespace-pre-wrap"
+        text={
+          isLong && !expanded
+            ? post.content.slice(0, TRUNCATE_AT) + "…"
+            : post.content
+        }
+        className="text-gray-200 text-sm leading-5 mb-1 whitespace-pre-wrap"
       />
+      {isLong && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+          className="text-purple-400 text-xs mb-3 hover:text-purple-300 transition-colors"
+        >
+          {expanded ? "See less" : "See more"}
+        </button>
+      )}
 
       {imageUri400 && (
         <ProgressiveImage

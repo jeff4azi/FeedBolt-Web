@@ -56,15 +56,15 @@ export default function EditPostPage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's on your mind?"
-          maxLength={280}
+          maxLength={1200}
           autoFocus
           rows={6}
           className="w-full bg-transparent text-gray-200 text-base leading-6 resize-none outline-none placeholder-gray-600"
         />
         <p
-          className={`text-xs text-right mt-2 ${content.length > 250 ? "text-red-400" : "text-gray-600"}`}
+          className={`text-xs text-right mt-2 ${content.length > 1100 ? "text-red-400" : "text-gray-600"}`}
         >
-          {280 - content.length}
+          {1200 - content.length}
         </p>
       </div>
     </div>
