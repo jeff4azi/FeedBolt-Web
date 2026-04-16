@@ -146,12 +146,10 @@ export default function PostCard({
         if (entry.isIntersecting) {
           observer.disconnect();
           supabase
-            .from("post_impressions")
-            .insert(
-              { user_id: user.id, post_id: post.id },
-              { ignoreDuplicates: true },
-            )
-            .then(() => {})
+            .rpc("increment_post_impression", {
+              p_user_id: user.id,
+              p_post_id: post.id,
+            })
             .catch(() => {});
         }
       },
