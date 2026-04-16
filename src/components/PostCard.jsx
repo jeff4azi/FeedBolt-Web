@@ -142,15 +142,14 @@ export default function PostCard({
     const el = cardRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => {
+      async ([entry]) => {
         if (entry.isIntersecting) {
           observer.disconnect();
-          supabase
-            .rpc("increment_post_impression", {
-              p_user_id: user.id,
-              p_post_id: post.id,
-            })
-            .catch(() => {});
+          const { error } = await supabase.rpc("increment_post_impression", {
+            p_user_id: user.id,
+            p_post_id: post.id,
+          });
+          if (error) console.error("[impression]", error.message);
         }
       },
       { threshold: 0.5 },

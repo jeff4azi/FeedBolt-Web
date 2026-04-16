@@ -104,6 +104,7 @@ export default function FeedPage() {
 
   // ─── Manual refresh — only way to get fresh data ───────────────────────────
   const handleRefresh = async () => {
+    window.scrollTo(0, 0);
     setRefreshing(true);
     postsCache = null;
     exhaustedCache = false;
