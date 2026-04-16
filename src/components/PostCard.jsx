@@ -133,6 +133,7 @@ export default function PostCard({
   const [expanded, setExpanded] = useState(false);
   const TRUNCATE_AT = 300;
   const isLong = post.content?.length > TRUNCATE_AT;
+  const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(
     post.comments?.[0]?.count ?? 0,
