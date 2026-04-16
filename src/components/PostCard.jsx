@@ -135,6 +135,32 @@ export default function PostCard({
   const [likeCount, setLikeCount] = useState(0);
   const [deleting, setDeleting] = useState(false);
 
+  // ─── Impression tracking ────────────────────────────────────────────────────
+  const cardRef = useRef(null);
+  useEffect(() => {
+    if (!user) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          supabase
+            .from("post_impressions")
+            .insert(
+              { user_id: user.id, post_id: post.id },
+              { ignoreDuplicates: true },
+            )
+            .then(() => {})
+            .catch(() => {});
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post.id, user]);
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -190,6 +216,7 @@ export default function PostCard({
 
   return (
     <div
+      ref={cardRef}
       onClick={() => {
         sessionStorage.setItem("feed-scroll", window.scrollY);
         navigate(`/post/${post.id}`);
