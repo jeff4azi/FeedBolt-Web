@@ -113,13 +113,11 @@ export default function SearchPage() {
       setTrendingTags(sorted);
     };
 
-    // Suggested users: most recent profiles excluding self
+    // Suggested users: highest follower count excluding self
     const fetchSuggested = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, fullname, username, avatar_url")
-        .neq("id", user?.id ?? "")
-        .limit(6);
+      const { data } = await supabase.rpc("get_suggested_users", {
+        p_user_id: user?.id ?? "00000000-0000-0000-0000-000000000000",
+      });
       if (data) setSuggestedUsers(data);
     };
 
