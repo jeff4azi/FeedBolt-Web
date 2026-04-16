@@ -128,11 +128,13 @@ export default function PostCard({
   const imagePlaceholder = post.image_url
     ? getPlaceholderUrl(post.image_url)
     : null;
-  const commentCount = post.comments?.[0]?.count ?? 0;
   const isOwner = showOwnerActions && user?.id === post.user_id;
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(
+    post.comments?.[0]?.count ?? 0,
+  );
   const [deleting, setDeleting] = useState(false);
 
   // ─── Impression tracking ────────────────────────────────────────────────────
@@ -168,6 +170,11 @@ export default function PostCard({
         setLikeCount(count ?? 0);
         setLiked(data?.some((l) => l.user_id === user.id) ?? false);
       });
+    supabase
+      .from("comments")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", post.id)
+      .then(({ count }) => setCommentCount(count ?? 0));
   }, [post.id, user]);
 
   const handleLike = async (e) => {
