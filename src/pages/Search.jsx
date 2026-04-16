@@ -20,7 +20,7 @@ function TrendingTag({ tag, count, onClick }) {
           <Hash size={15} color="#a855f7" />
         </div>
         <div className="text-left">
-          <p className="text-white text-sm font-medium">#{tag}</p>
+          <p className="text-white text-sm font-medium">{tag}</p>
           <p className="text-gray-500 text-xs">{count} posts</p>
         </div>
       </div>
@@ -87,30 +87,15 @@ export default function SearchPage() {
 
   // ── Fetch trending / suggested on mount ──────────────────────────────────
   useEffect(() => {
-    // Trending: top words/tags from recent post content (client-side extraction)
     const fetchTrending = async () => {
-      const { data } = await supabase
-        .from("posts")
-        .select("content")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (!data) return;
-
-      const freq = {};
-      data.forEach(({ content }) => {
-        const words = content.match(/#\w+/g) ?? [];
-        words.forEach((w) => {
-          const key = w.slice(1).toLowerCase();
-          freq[key] = (freq[key] ?? 0) + 1;
-        });
-      });
-
-      const sorted = Object.entries(freq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([tag, count]) => ({ tag, count }));
-
-      setTrendingTags(sorted);
+      const { data } = await supabase.rpc("get_trending_hashtags");
+      if (data)
+        setTrendingTags(
+          data.map(({ hashtag, usage_count }) => ({
+            tag: hashtag,
+            count: usage_count,
+          })),
+        );
     };
 
     // Suggested users: highest follower count excluding self
