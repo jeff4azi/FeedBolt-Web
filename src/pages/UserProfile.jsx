@@ -11,7 +11,7 @@ import { handleFollowNotification } from "../lib/notifications";
 export default function UserProfilePage() {
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +83,8 @@ export default function UserProfilePage() {
         followedUserId: userId,
         actorId: user.id,
         actorUsername:
-          user.user_metadata?.username ??
+          authProfile?.username ??
+          authProfile?.fullname ??
           user.user_metadata?.full_name ??
           "Someone",
       });

@@ -128,7 +128,8 @@ export default function PostDetailPage() {
     setCommentText("");
 
     const actorUsername =
-      user.user_metadata?.username ??
+      authProfile?.username ??
+      authProfile?.fullname ??
       user.user_metadata?.full_name ??
       user.email ??
       "Someone";
