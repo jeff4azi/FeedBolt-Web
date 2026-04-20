@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Heart,
   MessageCircle,
@@ -15,6 +16,7 @@ import RichText from "./RichText";
 import { timeAgo } from "../lib/timeAgo";
 
 function ReplyItem({ reply, onReply, onDeleted, currentUser }) {
+  const navigate = useNavigate();
   const profile = reply.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
   const repliedTo = reply.replied_to_username;
@@ -75,11 +77,17 @@ function ReplyItem({ reply, onReply, onDeleted, currentUser }) {
         />
       )}
       <div className="flex mt-3">
-        <Avatar
-          src={profile?.avatar_url}
-          size={26}
-          className="mt-0.5 shrink-0"
-        />
+        <button
+          onClick={() =>
+            profile?.id &&
+            (profile.id === currentUser?.id
+              ? navigate("/profile")
+              : navigate(`/user/${profile.id}`))
+          }
+          className="mt-0.5 shrink-0 self-start"
+        >
+          <Avatar src={profile?.avatar_url} size={26} />
+        </button>
         <div className="ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2">
           <div className="flex items-center justify-between mb-0.5">
             <div className="flex items-center gap-1">
@@ -143,6 +151,7 @@ export default function CommentItem({
   replyTarget,
   onRegisterFetch,
 }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const profile = comment.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
@@ -240,11 +249,17 @@ export default function CommentItem({
         />
       )}
       <div className="flex mb-4">
-        <Avatar
-          src={profile?.avatar_url}
-          size={32}
-          className="mt-0.5 shrink-0"
-        />
+        <button
+          onClick={() =>
+            profile?.id &&
+            (profile.id === user?.id
+              ? navigate("/profile")
+              : navigate(`/user/${profile.id}`))
+          }
+          className="mt-0.5 shrink-0 self-start"
+        >
+          <Avatar src={profile?.avatar_url} size={32} />
+        </button>
         <div className="ml-3 flex-1">
           <div className="bg-[#1a1a24] rounded-xl px-3 py-2.5">
             <div className="flex items-center justify-between mb-1">
