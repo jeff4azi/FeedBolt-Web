@@ -15,12 +15,22 @@ import Avatar from "./Avatar";
 import RichText from "./RichText";
 import { timeAgo } from "../lib/timeAgo";
 
-function ReplyItem({ reply, onReply, onDeleted, currentUser }) {
+function ReplyItem({
+  reply,
+  onReply,
+  onDeleted,
+  currentUser,
+  commentUsername,
+}) {
   const navigate = useNavigate();
   const profile = reply.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
   const repliedTo = reply.replied_to_username;
   const isOwner = currentUser?.id === reply.user_id;
+
+  // Only show the thread indicator when this reply is directed at another
+  // replier — not at the original commenter
+  const isReplyToReply = repliedTo && repliedTo !== commentUsername;
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -76,67 +86,82 @@ function ReplyItem({ reply, onReply, onDeleted, currentUser }) {
           onCancel={handleCancel}
         />
       )}
-      <div className="flex mt-3">
-        <button
-          onClick={() =>
-            profile?.id &&
-            (profile.id === currentUser?.id
-              ? navigate("/profile")
-              : navigate(`/user/${profile.id}`))
-          }
-          className="mt-0.5 shrink-0 self-start"
-        >
-          <Avatar src={profile?.avatar_url} size={26} />
-        </button>
-        <div className="ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2">
-          <div className="flex items-center justify-between mb-0.5">
-            <div className="flex items-center gap-1">
-              <span className="text-white font-semibold text-xs">
-                {username}
-              </span>
-              {repliedTo && (
-                <>
-                  <span className="text-gray-600 text-xs">›</span>
-                  <span className="text-purple-400 text-xs">{repliedTo}</span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600 text-xs">
-                {timeAgo(reply.created_at)}
-              </span>
-              {isOwner && (
-                <button
-                  onClick={handleDelete}
-                  className="text-gray-600 hover:text-red-400 transition-colors"
-                >
-                  <Trash2 size={11} />
-                </button>
-              )}
-            </div>
-          </div>
-          <RichText
-            text={reply.content}
-            className="text-gray-300 text-xs leading-5"
+      <div style={{ position: "relative" }}>
+        {/* Horizontal tick — only for reply-to-reply */}
+        {isReplyToReply && (
+          <div
+            style={{
+              position: "absolute",
+              left: -18,
+              top: 15,
+              width: 14,
+              height: 1.5,
+              background: "#2d2d3a",
+            }}
           />
-          <div className="flex items-center gap-3 mt-1.5">
-            <button onClick={handleLike} className="flex items-center gap-1">
-              <Heart
-                size={11}
-                fill={liked ? "#a855f7" : "none"}
-                color={liked ? "#a855f7" : "#6b7280"}
-              />
-              {likeCount > 0 && (
-                <span className="text-gray-600 text-xs">{likeCount}</span>
-              )}
-            </button>
-            <button
-              onClick={() => onReply(username)}
-              className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs transition-colors"
-            >
-              <MessageCircle size={11} />
-              Reply
-            </button>
+        )}
+        <div className="flex mt-3">
+          <button
+            onClick={() =>
+              profile?.id &&
+              (profile.id === currentUser?.id
+                ? navigate("/profile")
+                : navigate(`/user/${profile.id}`))
+            }
+            className="mt-0.5 shrink-0 self-start"
+          >
+            <Avatar src={profile?.avatar_url} size={26} />
+          </button>
+          <div className="ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2">
+            <div className="flex items-center justify-between mb-0.5">
+              <div className="flex items-center gap-1">
+                <span className="text-white font-semibold text-xs">
+                  {username}
+                </span>
+                {repliedTo && (
+                  <>
+                    <span className="text-gray-600 text-xs">›</span>
+                    <span className="text-purple-400 text-xs">{repliedTo}</span>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 text-xs">
+                  {timeAgo(reply.created_at)}
+                </span>
+                {isOwner && (
+                  <button
+                    onClick={handleDelete}
+                    className="text-gray-600 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                )}
+              </div>
+            </div>
+            <RichText
+              text={reply.content}
+              className="text-gray-300 text-xs leading-5"
+            />
+            <div className="flex items-center gap-3 mt-1.5">
+              <button onClick={handleLike} className="flex items-center gap-1">
+                <Heart
+                  size={11}
+                  fill={liked ? "#a855f7" : "none"}
+                  color={liked ? "#a855f7" : "#6b7280"}
+                />
+                {likeCount > 0 && (
+                  <span className="text-gray-600 text-xs">{likeCount}</span>
+                )}
+              </button>
+              <button
+                onClick={() => onReply(username)}
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-400 text-xs transition-colors"
+              >
+                <MessageCircle size={11} />
+                Reply
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -239,6 +264,13 @@ export default function CommentItem({
 
   const isReplying = replyTarget?.commentId === comment.id;
 
+  // The vertical line only makes sense when at least one reply in the list
+  // is a reply-to-a-reply (i.e. directed at another replier, not the
+  // original commenter)
+  const hasReplyToReply = replies.some(
+    (r) => r.replied_to_username && r.replied_to_username !== username,
+  );
+
   return (
     <>
       {state && (
@@ -335,22 +367,43 @@ export default function CommentItem({
           </div>
 
           {/* Replies list */}
-          {showReplies &&
-            replies.map((r) => (
-              <ReplyItem
-                key={r.id}
-                reply={r}
-                currentUser={user}
-                onDeleted={handleReplyDeleted}
-                onReply={(targetUsername) =>
-                  onReply({
-                    commentId: comment.id,
-                    commentOwnerId: comment.user_id,
-                    username: targetUsername,
-                  })
-                }
-              />
-            ))}
+          {showReplies && replies.length > 0 && (
+            <div
+              style={{ position: "relative", paddingLeft: 18, marginTop: 10 }}
+            >
+              {/* Vertical thread line — only rendered when there are
+                  reply-to-reply items that need the connecting tick */}
+              {hasReplyToReply && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 11,
+                    top: 0,
+                    bottom: 10,
+                    width: 1.5,
+                    background: "#2d2d3a",
+                    borderRadius: 2,
+                  }}
+                />
+              )}
+              {replies.map((r) => (
+                <ReplyItem
+                  key={r.id}
+                  reply={r}
+                  currentUser={user}
+                  commentUsername={username}
+                  onDeleted={handleReplyDeleted}
+                  onReply={(targetUsername) =>
+                    onReply({
+                      commentId: comment.id,
+                      commentOwnerId: comment.user_id,
+                      username: targetUsername,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
           {showReplies && repliesLoaded && replies.length === 0 && (
             <p className="text-gray-600 text-xs px-1 mt-2">No replies yet.</p>
           )}
