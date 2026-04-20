@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import ProgressiveImage from "./ProgressiveImage";
-import { getPlaceholderUrl } from "../lib/imageUtils";
 
 export default function ImageViewer({ uri, visible, onClose }) {
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     if (!visible) return;
+    setLoaded(false);
     const handler = (e) => {
       if (e.key === "Escape") onClose();
     };
@@ -20,14 +21,19 @@ export default function ImageViewer({ uri, visible, onClose }) {
       className="fixed inset-0 z-50 bg-black flex items-center justify-center"
       onClick={onClose}
     >
-      <ProgressiveImage
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+      <img
         src={uri}
-        placeholderSrc={getPlaceholderUrl(uri)}
         alt="full size"
         loading="eager"
-        className="max-w-full max-h-full"
-        style={{ maxWidth: "100vw", maxHeight: "100vh" }}
+        onLoad={() => setLoaded(true)}
         onClick={(e) => e.stopPropagation()}
+        className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        style={{ maxWidth: "100vw", maxHeight: "100vh" }}
       />
       <button
         onClick={onClose}

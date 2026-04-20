@@ -45,7 +45,13 @@ export default function ProgressiveImage({
           src={placeholderSrc}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover scale-110 blur-lg"
+          className={`transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${
+            isTall
+              ? // Tall: fill the 4:5 container, center-crop top & bottom
+                "absolute inset-0 w-full h-full object-cover object-center"
+              : // Normal: natural width/height, no cropping
+                "w-full block"
+          }`}
         />
       )}
 
