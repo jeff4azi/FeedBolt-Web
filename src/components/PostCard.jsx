@@ -277,8 +277,7 @@ export default function PostCard({
           placeholderSrc={imagePlaceholder}
           alt="post"
           loading="lazy"
-          className="w-full mb-4 md:max-w-lg md:mx-auto" // constrain width on desktop
-          onClick={(e) => e.stopPropagation()}
+          className="w-full mb-4 md:max-w-lg md:mx-auto"
         />
       )}
 
