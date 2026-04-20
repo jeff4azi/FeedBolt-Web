@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-export default function ImageViewer({ uri, visible, onClose }) {
+export default function ImageViewer({ uri, placeholderUri, visible, onClose }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -21,10 +21,15 @@ export default function ImageViewer({ uri, visible, onClose }) {
       className="fixed inset-0 z-50 bg-black flex items-center justify-center"
       onClick={onClose}
     >
-      {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        </div>
+      {/* Blurred placeholder shown while full image loads */}
+      {placeholderUri && !loaded && (
+        <img
+          src={placeholderUri}
+          alt=""
+          aria-hidden="true"
+          className="absolute max-w-full max-h-full object-contain blur-lg scale-105"
+          style={{ maxWidth: "100vw", maxHeight: "100vh" }}
+        />
       )}
       <img
         src={uri}
@@ -32,7 +37,7 @@ export default function ImageViewer({ uri, visible, onClose }) {
         loading="eager"
         onLoad={() => setLoaded(true)}
         onClick={(e) => e.stopPropagation()}
-        className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`relative max-w-full max-h-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
         style={{ maxWidth: "100vw", maxHeight: "100vh" }}
       />
       <button

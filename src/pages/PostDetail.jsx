@@ -361,6 +361,7 @@ export default function PostDetailPage() {
       {imageViewerUri && (
         <ImageViewer
           uri={imageViewerUri}
+          placeholderUri={imagePlaceholder}
           visible={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
         />
