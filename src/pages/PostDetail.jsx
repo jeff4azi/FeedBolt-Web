@@ -258,7 +258,6 @@ export default function PostDetailPage() {
                     alt="post"
                     loading="lazy"
                     className="w-full rounded-xl"
-                    style={{ aspectRatio: "16/9" }}
                   />
                 </button>
               )}
