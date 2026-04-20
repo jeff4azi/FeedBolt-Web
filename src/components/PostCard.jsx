@@ -131,7 +131,7 @@ export default function PostCard({
   const isOwner = showOwnerActions && user?.id === post.user_id;
 
   const [expanded, setExpanded] = useState(false);
-  const TRUNCATE_AT = 300;
+  const TRUNCATE_AT = 500;
   const isLong = post.content?.length > TRUNCATE_AT;
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
