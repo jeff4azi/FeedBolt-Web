@@ -114,6 +114,8 @@ export default function NotificationsPage() {
       setUnreadCount((prev) => Math.max(0, prev - 1));
     }
     if (notif.post_id) navigate(`/post/${notif.post_id}`);
+    else if (notif.type === "follow" && notif.actor_id)
+      navigate(`/user/${notif.actor_id}`);
   };
 
   const markAllRead = async () => {
