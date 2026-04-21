@@ -7,6 +7,7 @@ import {
   UserPlus,
   CheckCheck,
   ArrowLeft,
+  ShieldAlert,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -21,6 +22,7 @@ const TYPE_META = {
   },
   reply: { icon: MessageCircle, color: "text-blue-400", bg: "bg-blue-500/10" },
   follow: { icon: UserPlus, color: "text-green-400", bg: "bg-green-500/10" },
+  warning: { icon: ShieldAlert, color: "text-red-400", bg: "bg-red-500/10" },
 };
 
 function NotifRow({ notif, onClick }) {
