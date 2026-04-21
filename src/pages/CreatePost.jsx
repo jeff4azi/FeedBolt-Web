@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { uploadImageFile } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
 import { trackEvent } from "../lib/analytics";
+import { handleNewPostNotification } from "../lib/notifications";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
@@ -40,14 +41,28 @@ export default function CreatePostPage() {
         image_url = uploaded.image_url;
         image_public_id = uploaded.image_public_id;
       }
-      const { error } = await supabase.from("posts").insert({
-        user_id: user.id,
-        content: content.trim(),
-        image_url,
-        image_public_id,
-      });
+      const { data: postData, error } = await supabase
+        .from("posts")
+        .insert({
+          user_id: user.id,
+          content: content.trim(),
+          image_url,
+          image_public_id,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
       trackEvent("Post", "create", pickedFile ? "with_image" : "text_only");
+      const actorUsername =
+        profile?.username ??
+        profile?.fullname ??
+        user?.user_metadata?.full_name ??
+        "Someone";
+      handleNewPostNotification({
+        postId: postData.id,
+        actorId: user.id,
+        actorUsername,
+      });
       navigate(-1);
     } catch (err) {
       alert(err.message);

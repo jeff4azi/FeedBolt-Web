@@ -98,6 +98,31 @@ export async function handleFollowNotification({
   });
 }
 
+// ── Called after a new post is created — notifies all followers ───────────
+export async function handleNewPostNotification({
+  postId,
+  actorId,
+  actorUsername,
+}) {
+  const { data: followers } = await supabase
+    .from("follows")
+    .select("follower_id")
+    .eq("following_id", actorId);
+
+  if (!followers?.length) return;
+
+  const rows = followers.map(({ follower_id }) => ({
+    user_id: follower_id,
+    type: "new_post",
+    post_id: postId,
+    actor_id: actorId,
+    actor_username: actorUsername,
+    message: `${actorUsername} just posted something new`,
+  }));
+
+  await supabase.from("notifications").insert(rows);
+}
+
 export async function requestNotificationPermission() {
   return "unsupported";
 }
