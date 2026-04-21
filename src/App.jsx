@@ -19,6 +19,7 @@ import EditProfilePage from "./pages/EditProfile";
 import EditPostPage from "./pages/EditPost";
 import SearchPage from "./pages/Search";
 import NotificationsPage from "./pages/Notifications";
+import FollowListPage from "./pages/FollowList";
 import { trackPageView } from "./lib/analytics";
 
 function RootNavigator() {
@@ -71,6 +72,8 @@ function RootNavigator() {
       <Route path="/user/:userId" element={<UserProfilePage />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
       <Route path="/edit-post/:postId" element={<EditPostPage />} />
+      <Route path="/user/:userId/followers" element={<FollowListPage />} />
+      <Route path="/user/:userId/following" element={<FollowListPage />} />
       <Route path="*" element={<Navigate to="/feed" replace />} />
     </Routes>
   );

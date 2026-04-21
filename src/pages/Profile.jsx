@@ -126,18 +126,24 @@ export default function ProfilePage() {
               </span>
               <span className="text-gray-500 text-xs">Posts</span>
             </div>
-            <div className="flex flex-col items-center">
+            <button
+              onClick={() => navigate(`/user/${user.id}/followers`)}
+              className="flex flex-col items-center hover:opacity-75 transition-opacity"
+            >
               <span className="text-white font-bold text-lg">
                 {followerCount}
               </span>
               <span className="text-gray-500 text-xs">Followers</span>
-            </div>
-            <div className="flex flex-col items-center">
+            </button>
+            <button
+              onClick={() => navigate(`/user/${user.id}/following`)}
+              className="flex flex-col items-center hover:opacity-75 transition-opacity"
+            >
               <span className="text-white font-bold text-lg">
                 {followingCount}
               </span>
               <span className="text-gray-500 text-xs">Following</span>
-            </div>
+            </button>
           </div>
 
           <button
