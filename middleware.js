@@ -42,7 +42,10 @@ export default async function middleware(request) {
   const caption = post?.content
     ? post.content.slice(0, 200) + (post.content.length > 200 ? "…" : "")
     : "Check out this post on FeedBolt";
-  const image = post?.image_url ?? `${SITE_URL}/FeedBolt.jpg`;
+  const rawImage = post?.image_url ?? null;
+  const image = rawImage
+    ? rawImage.replace("/upload/", "/upload/f_auto,q_auto:eco,w_600,c_limit/")
+    : `${SITE_URL}/FeedBolt.jpg`;
   const title = `${escapeHtml(author)} on FeedBolt`;
   const description = escapeHtml(caption);
   const postUrl = `${SITE_URL}/post/${postId}`;
