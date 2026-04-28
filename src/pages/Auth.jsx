@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import FeedBoltLogo from "../assets/FeedBolt.jpg";
 import { trackEvent } from "../lib/analytics";
+import AlertDialog from "../components/AlertDialog";
+import { useAlert } from "../hooks/useAlert";
 function GoogleIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24">
@@ -28,6 +30,7 @@ function GoogleIcon() {
 export default function AuthPage() {
   const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { alert, state, handleClose } = useAlert();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -36,13 +39,14 @@ export default function AuthPage() {
       await signInWithGoogle();
       trackEvent("Auth", "sign_in_success", "google");
     } catch (err) {
-      alert(err.message);
+      await alert(err.message);
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0B0B0F] flex flex-col items-center justify-between px-8 py-12 relative overflow-hidden">
+      {state && <AlertDialog message={state.message} onClose={handleClose} />}
       {/* Background glow */}
       <div
         className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-20 pointer-events-none"

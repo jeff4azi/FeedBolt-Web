@@ -39,7 +39,6 @@ async function compressImage(file) {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
       let { width, height } = img;
 
       // Scale down if larger than MAX_DIMENSION
@@ -60,6 +59,7 @@ async function compressImage(file) {
 
       canvas.toBlob(
         (blob) => {
+          URL.revokeObjectURL(objectUrl);
           if (!blob) return reject(new Error("Canvas compression failed."));
           resolve(blob);
         },
@@ -67,8 +67,10 @@ async function compressImage(file) {
         COMPRESS_QUALITY,
       );
     };
-    img.onerror = () =>
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error("Failed to load image for compression."));
+    };
     img.src = objectUrl;
   });
 }
@@ -134,6 +136,12 @@ export async function uploadAvatarFile(file, userId) {
 }
 
 export async function uploadImageFile(file) {
+  const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!supported.includes(file.type)) {
+    throw new Error(
+      `Unsupported image format (${file.type || "unknown"}). Please use JPG, PNG, or WebP.`,
+    );
+  }
   const compressed = await compressImage(file);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

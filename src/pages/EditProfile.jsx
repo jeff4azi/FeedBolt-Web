@@ -6,6 +6,8 @@ import { supabase } from "../lib/supabase";
 import { uploadAvatarFile, deleteAvatarImage } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
 import { trackEvent } from "../lib/analytics";
+import AlertDialog from "../components/AlertDialog";
+import { useAlert } from "../hooks/useAlert";
 
 function Field({ label, inputClassName = "", ...props }) {
   return (
@@ -34,6 +36,8 @@ export default function EditProfilePage() {
   const [hasExistingAvatar, setHasExistingAvatar] = useState(false);
   const fileInputRef = useRef(null);
 
+  const { alert, state: alertState, handleClose } = useAlert();
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -61,7 +65,7 @@ export default function EditProfilePage() {
 
   const handleSave = async () => {
     if (!displayName.trim()) {
-      alert("Display name cannot be empty.");
+      await alert("Display name cannot be empty.");
       return;
     }
     setSaving(true);
@@ -98,7 +102,7 @@ export default function EditProfilePage() {
       trackEvent("Profile", "update", pickedFile ? "with_avatar" : "info_only");
       navigate(-1);
     } catch (err) {
-      alert(err.message);
+      await alert(err.message);
     } finally {
       setSaving(false);
     }
@@ -106,6 +110,9 @@ export default function EditProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
+      {alertState && (
+        <AlertDialog message={alertState.message} onClose={handleClose} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <button

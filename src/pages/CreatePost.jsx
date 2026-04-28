@@ -7,6 +7,8 @@ import { uploadImageFile } from "../lib/imageUtils";
 import Avatar from "../components/Avatar";
 import { trackEvent } from "../lib/analytics";
 import { handleNewPostNotification } from "../lib/notifications";
+import AlertDialog from "../components/AlertDialog";
+import { useAlert } from "../hooks/useAlert";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default function CreatePostPage() {
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [posting, setPosting] = useState(false);
+  const { alert, state: alertState, handleClose } = useAlert();
   const fileInputRef = useRef(null);
 
   const handlePickImage = (e) => {
@@ -65,7 +68,7 @@ export default function CreatePostPage() {
       });
       navigate(-1);
     } catch (err) {
-      alert(err.message);
+      await alert(err.message);
     } finally {
       setPosting(false);
     }
@@ -78,6 +81,9 @@ export default function CreatePostPage() {
 
   return (
     <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
+      {alertState && (
+        <AlertDialog message={alertState.message} onClose={handleClose} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <button

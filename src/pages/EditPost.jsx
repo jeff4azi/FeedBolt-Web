@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import AlertDialog from "../components/AlertDialog";
+import { useAlert } from "../hooks/useAlert";
 
 export default function EditPostPage() {
   const navigate = useNavigate();
@@ -9,6 +11,7 @@ export default function EditPostPage() {
   const { state } = useLocation();
   const [content, setContent] = useState(state?.content ?? "");
   const [saving, setSaving] = useState(false);
+  const { alert, state: alertState, handleClose } = useAlert();
 
   const handleSave = async () => {
     if (!content.trim() || saving) return;
@@ -18,7 +21,7 @@ export default function EditPostPage() {
       .update({ content: content.trim() })
       .eq("id", postId);
     if (error) {
-      alert(error.message);
+      await alert(error.message);
       setSaving(false);
     } else {
       navigate(-1);
@@ -29,6 +32,9 @@ export default function EditPostPage() {
 
   return (
     <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
+      {alertState && (
+        <AlertDialog message={alertState.message} onClose={handleClose} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <button

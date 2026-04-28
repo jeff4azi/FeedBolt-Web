@@ -7,7 +7,9 @@ import PostCard from "../components/PostCard";
 import { PostCardSkeleton, ProfileSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ConfirmDialog from "../components/ConfirmDialog";
+import AlertDialog from "../components/AlertDialog";
 import { useConfirm } from "../hooks/useConfirm";
+import { useAlert } from "../hooks/useAlert";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export default function ProfilePage() {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const { confirm, state, handleConfirm, handleCancel } = useConfirm();
+  const { alert, state: alertState, handleClose } = useAlert();
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -63,7 +66,7 @@ export default function ProfilePage() {
       await signOut();
       navigate("/auth");
     } catch (err) {
-      alert(err.message);
+      await alert(err.message);
     }
   };
 
@@ -83,6 +86,9 @@ export default function ProfilePage() {
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />
+      )}
+      {alertState && (
+        <AlertDialog message={alertState.message} onClose={handleClose} />
       )}
       {/* Header */}
       <div className="sticky top-0 z-20 bg-[#0B0B0F]/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
