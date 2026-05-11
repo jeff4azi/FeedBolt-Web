@@ -16,7 +16,7 @@ import {
   getPlaceholderUrl,
   deletePostImage,
 } from "../lib/imageUtils";
-import { isYoutubeLink } from "../lib/youtubeUtils";
+import { extractVideoId } from "../lib/youtubeUtils";
 import { timeAgo } from "../lib/timeAgo";
 import Avatar from "./Avatar";
 import YoutubePost from "./YoutubePost";
@@ -131,6 +131,8 @@ export default function PostCard({
     ? getPlaceholderUrl(post.image_url)
     : null;
   const isOwner = showOwnerActions && user?.id === post.user_id;
+  const youtubeVideoId =
+    extractVideoId(post.image_public_id) ?? extractVideoId(post.image_url);
 
   const [expanded, setExpanded] = useState(false);
   const TRUNCATE_AT = 500;
@@ -273,8 +275,8 @@ export default function PostCard({
         </button>
       )}
 
-      {isYoutubeLink(post.image_url) && post.image_public_id ? (
-        <div className="mb-4">
+      {youtubeVideoId ? (
+        <div className="mb-4" onClick={(e) => e.stopPropagation()}>
           <YoutubePost post={post} />
         </div>
       ) : imageUri400 ? (

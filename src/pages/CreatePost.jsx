@@ -9,6 +9,7 @@ import { trackEvent } from "../lib/analytics";
 import { handleNewPostNotification } from "../lib/notifications";
 import AlertDialog from "../components/AlertDialog";
 import { useAlert } from "../hooks/useAlert";
+import { extractVideoId } from "../lib/youtubeUtils";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
@@ -23,15 +24,8 @@ export default function CreatePostPage() {
   const { alert, state: alertState, handleClose } = useAlert();
   const fileInputRef = useRef(null);
 
-  const extractYoutubeId = (url) => {
-    const match = url.match(
-      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-    );
-    return match?.[1] ?? null;
-  };
-
   const handleYoutubeSave = () => {
-    const id = extractYoutubeId(youtubeUrl.trim());
+    const id = extractVideoId(youtubeUrl);
     if (!id) return;
     setYoutubeVideoId(id);
     setShowYoutubeInput(false);
@@ -201,7 +195,7 @@ export default function CreatePostPage() {
                 />
                 <button
                   onClick={handleYoutubeSave}
-                  disabled={!extractYoutubeId(youtubeUrl.trim())}
+                  disabled={!extractVideoId(youtubeUrl)}
                   className="px-3 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-semibold rounded-xl transition-colors"
                 >
                   Save

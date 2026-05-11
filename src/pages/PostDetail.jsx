@@ -10,7 +10,7 @@ import { PostDetailSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ProgressiveImage from "../components/ProgressiveImage";
 import RichText from "../components/RichText";
-import { isYoutubeLink } from "../lib/youtubeUtils";
+import { extractVideoId } from "../lib/youtubeUtils";
 import YoutubePost from "../components/YoutubePost";
 import {
   handleCommentNotification,
@@ -208,6 +208,9 @@ export default function PostDetailPage() {
   const imageViewerUri = post?.image_url
     ? getOptimizedImageUrl(post.image_url, { width: "w_700" })
     : null;
+  const youtubeVideoId = post
+    ? extractVideoId(post.image_public_id) ?? extractVideoId(post.image_url)
+    : null;
   const userAvatar = authProfile?.avatar_url ?? user?.user_metadata?.avatar_url;
 
   return (
@@ -250,7 +253,7 @@ export default function PostDetailPage() {
                 text={post.content}
                 className="text-gray-200 text-base leading-6 mb-4 whitespace-pre-wrap"
               />
-              {isYoutubeLink(post.image_url) && post.image_public_id ? (
+              {youtubeVideoId ? (
                 <div className="mb-4">
                   <YoutubePost post={post} />
                 </div>
