@@ -355,7 +355,10 @@ export default function PostDetailPage() {
                 e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(
+                  navigator.userAgent,
+                );
+                if (e.key === "Enter" && !e.shiftKey && !isMobile) {
                   e.preventDefault();
                   if (commentText.trim()) handleSubmit(e);
                 }
