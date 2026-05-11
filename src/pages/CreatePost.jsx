@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ImagePlus, XCircle } from "lucide-react";
+import { X, ImagePlus, XCircle, Youtube } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { uploadImageFile } from "../lib/imageUtils";
@@ -17,8 +17,34 @@ export default function CreatePostPage() {
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [posting, setPosting] = useState(false);
+  const [showYoutubeInput, setShowYoutubeInput] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeVideoId, setYoutubeVideoId] = useState(null);
   const { alert, state: alertState, handleClose } = useAlert();
   const fileInputRef = useRef(null);
+
+  const extractYoutubeId = (url) => {
+    const match = url.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    );
+    return match?.[1] ?? null;
+  };
+
+  const handleYoutubeSave = () => {
+    const id = extractYoutubeId(youtubeUrl.trim());
+    if (!id) return;
+    setYoutubeVideoId(id);
+    setShowYoutubeInput(false);
+    // Clear any picked image since we're using YouTube
+    setPickedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveYoutube = () => {
+    setYoutubeVideoId(null);
+    setYoutubeUrl("");
+  };
 
   const handlePickImage = (e) => {
     const file = e.target.files?.[0];
@@ -43,6 +69,9 @@ export default function CreatePostPage() {
         const uploaded = await uploadImageFile(pickedFile);
         image_url = uploaded.image_url;
         image_public_id = uploaded.image_public_id;
+      } else if (youtubeVideoId) {
+        image_url = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
+        image_public_id = youtubeVideoId;
       }
       const { data: postData, error } = await supabase
         .from("posts")
@@ -137,22 +166,89 @@ export default function CreatePostPage() {
               </div>
             )}
 
-            {/* Toolbar row: image picker + char count */}
+            {/* YouTube preview */}
+            {youtubeVideoId && (
+              <div className="relative mt-3">
+                <img
+                  src={`https://img.youtube.com/vi/${youtubeVideoId}/hqdefault.jpg`}
+                  alt="YouTube preview"
+                  className="w-full rounded-xl object-cover max-h-80"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black/60 rounded-full p-3">
+                    <Youtube size={28} color="#ff0000" />
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveYoutube}
+                  className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 transition-colors"
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
+            )}
+
+            {/* YouTube URL input */}
+            {showYoutubeInput && (
+              <div className="mt-3 flex gap-2">
+                <input
+                  autoFocus
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleYoutubeSave()}
+                  placeholder="Paste YouTube link..."
+                  className="flex-1 bg-[#1a1a24] text-gray-200 text-sm rounded-xl px-3 py-2 outline-none border border-gray-700 focus:border-purple-600 transition-colors placeholder-gray-600"
+                />
+                <button
+                  onClick={handleYoutubeSave}
+                  disabled={!extractYoutubeId(youtubeUrl.trim())}
+                  className="px-3 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setShowYoutubeInput(false);
+                    setYoutubeUrl("");
+                  }}
+                  className="px-3 py-2 text-gray-500 hover:text-white text-sm rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {/* Toolbar row: image picker + youtube + char count */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePickImage}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="text-purple-400 hover:text-purple-300 transition-colors"
-                title="Add image"
-              >
-                <ImagePlus size={20} />
-              </button>
+              <div className="flex items-center gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePickImage}
+                />
+                <button
+                  onClick={() => {
+                    handleRemoveYoutube();
+                    fileInputRef.current?.click();
+                  }}
+                  className="text-purple-400 hover:text-purple-300 transition-colors"
+                  title="Add image"
+                >
+                  <ImagePlus size={20} />
+                </button>
+                <button
+                  onClick={() => {
+                    handleRemoveImage();
+                    setShowYoutubeInput((v) => !v);
+                  }}
+                  className={`transition-colors ${youtubeVideoId ? "text-red-500" : "text-purple-400 hover:text-purple-300"}`}
+                  title="Add YouTube video"
+                >
+                  <Youtube size={20} />
+                </button>
+              </div>
               <p
                 className={`text-xs ${content.length > 1100 ? "text-red-400" : "text-gray-600"}`}
               >

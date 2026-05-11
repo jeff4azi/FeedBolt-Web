@@ -16,8 +16,10 @@ import {
   getPlaceholderUrl,
   deletePostImage,
 } from "../lib/imageUtils";
+import { isYoutubeLink } from "../lib/youtubeUtils";
 import { timeAgo } from "../lib/timeAgo";
 import Avatar from "./Avatar";
+import YoutubePost from "./YoutubePost";
 import ConfirmDialog from "./ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import ProgressiveImage from "./ProgressiveImage";
@@ -271,7 +273,11 @@ export default function PostCard({
         </button>
       )}
 
-      {imageUri400 && (
+      {isYoutubeLink(post.image_url) && post.image_public_id ? (
+        <div className="mb-4">
+          <YoutubePost post={post} />
+        </div>
+      ) : imageUri400 ? (
         <ProgressiveImage
           src={imageUri500}
           placeholderSrc={imagePlaceholder}
@@ -279,7 +285,7 @@ export default function PostCard({
           loading="lazy"
           className="w-full mb-4 md:max-w-lg md:mx-auto"
         />
-      )}
+      ) : null}
 
       <div className="flex items-center gap-5">
         <button onClick={handleLike} className="flex items-center gap-1.5">

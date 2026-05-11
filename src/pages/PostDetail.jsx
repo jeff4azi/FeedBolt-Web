@@ -10,6 +10,8 @@ import { PostDetailSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ProgressiveImage from "../components/ProgressiveImage";
 import RichText from "../components/RichText";
+import { isYoutubeLink } from "../lib/youtubeUtils";
+import YoutubePost from "../components/YoutubePost";
 import {
   handleCommentNotification,
   handleLikeNotification,
@@ -248,7 +250,11 @@ export default function PostDetailPage() {
                 text={post.content}
                 className="text-gray-200 text-base leading-6 mb-4 whitespace-pre-wrap"
               />
-              {imageUri && (
+              {isYoutubeLink(post.image_url) && post.image_public_id ? (
+                <div className="mb-4">
+                  <YoutubePost post={post} />
+                </div>
+              ) : imageUri ? (
                 <button
                   onClick={() => setImageViewerOpen(true)}
                   className="w-full mb-4"
@@ -261,7 +267,7 @@ export default function PostDetailPage() {
                     className="w-full rounded-xl"
                   />
                 </button>
-              )}
+              ) : null}
               <div className="flex items-center gap-5 pt-3 border-t border-gray-800">
                 <button
                   onClick={handleLike}
