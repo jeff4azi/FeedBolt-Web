@@ -37,7 +37,7 @@ export default function YoutubePost({ post }) {
           {/* Dark overlay on hover */}
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
           {/* Play button */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center scale-75 lg:scale-100">
             <div className="group-hover:scale-110 transition-transform duration-200">
               <svg
                 width="68"

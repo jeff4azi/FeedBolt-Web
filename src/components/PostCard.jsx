@@ -91,7 +91,7 @@ function OwnerMenu({ post, onDeleted, onDeletingChange }) {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-7 z-20 bg-[#1a1a2e] border border-gray-800 rounded-xl shadow-xl overflow-hidden min-w-[150px]">
+        <div className="absolute right-0 top-7 z-20 bg-[#1a1a2e] border border-gray-800 rounded-xl shadow-xl overflow-hidden min-w-37.5">
           <button
             onClick={handleEdit}
             className="flex items-center gap-3 w-full px-4 py-3 text-white hover:bg-[#121218] transition-colors text-sm"
