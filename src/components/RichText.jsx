@@ -71,13 +71,22 @@ function renderPart(part, i, hashtags) {
 
 export default function RichText({ text, className, hashtags = false }) {
   if (!text) return <p className={className} />;
-  URL_REGEX.lastIndex = 0;
-  HASHTAG_REGEX.lastIndex = 0;
-  const parts = text.split(URL_REGEX);
+
+  const lines = text.split("\n");
 
   return (
     <p className={className}>
-      {parts.map((part, i) => renderPart(part, i, hashtags))}
+      {lines.map((line, lineIdx) => {
+        URL_REGEX.lastIndex = 0;
+        HASHTAG_REGEX.lastIndex = 0;
+        const parts = line.split(URL_REGEX);
+        return (
+          <span key={lineIdx}>
+            {parts.map((part, i) => renderPart(part, i, hashtags))}
+            {lineIdx < lines.length - 1 && <br />}
+          </span>
+        );
+      })}
     </p>
   );
 }

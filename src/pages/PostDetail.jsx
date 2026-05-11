@@ -126,6 +126,7 @@ export default function PostDetailPage() {
     const text = commentText.trim();
     if (!text) return;
     setCommentText("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
 
     const actorUsername =
       authProfile?.username ??
@@ -336,16 +337,27 @@ export default function PostDetailPage() {
             onSubmit={handleSubmit}
             className="flex-1 flex items-center gap-2"
           >
-            <input
+            <textarea
               ref={inputRef}
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
+              onChange={(e) => {
+                setCommentText(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (commentText.trim()) handleSubmit(e);
+                }
+              }}
               placeholder={
                 replyTarget
                   ? `Reply to ${replyTarget.username}...`
                   : "Add a comment..."
               }
-              className="flex-1 bg-[#121218] text-gray-200 rounded-full px-4 py-2.5 text-sm outline-none border border-gray-800 focus:border-purple-700 transition-colors placeholder-gray-600"
+              rows={1}
+              className="flex-1 bg-[#121218] text-gray-200 rounded-2xl px-4 py-2.5 text-sm outline-none border border-gray-800 focus:border-purple-700 transition-colors placeholder-gray-600 resize-none overflow-hidden leading-5"
             />
             <button type="submit" className="shrink-0">
               <Send
