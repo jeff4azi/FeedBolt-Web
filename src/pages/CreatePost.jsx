@@ -53,6 +53,17 @@ export default function CreatePostPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const getThumbnailUrl = async (videoId) => {
+    const max = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    const sd = `https://img.youtube.com/vi/${videoId}/sddefault.jpg`;
+    try {
+      const res = await fetch(max, { method: "HEAD" });
+      return res.ok ? max : sd;
+    } catch {
+      return sd;
+    }
+  };
+
   const handlePost = async () => {
     if (content.trim().length === 0 || posting) return;
     setPosting(true);
@@ -64,7 +75,7 @@ export default function CreatePostPage() {
         image_url = uploaded.image_url;
         image_public_id = uploaded.image_public_id;
       } else if (youtubeVideoId) {
-        image_url = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
+        image_url = await getThumbnailUrl(youtubeVideoId);
         image_public_id = youtubeVideoId;
       }
       const { data: postData, error } = await supabase
