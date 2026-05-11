@@ -7,18 +7,31 @@ async function insertNotification({
   userId,
   type,
   postId,
+  commentId,
+  replyId,
   actorId,
   actorUsername,
   message,
 }) {
-  await supabase.from("notifications").insert({
+  const row = {
     user_id: userId,
     type,
     post_id: postId ?? null,
+    comment_id: commentId ?? null,
+    reply_id: replyId ?? null,
     actor_id: actorId ?? null,
     actor_username: actorUsername ?? null,
     message,
-  });
+  };
+
+  const { error } = await supabase.from("notifications").insert(row);
+
+  if (error && (commentId || replyId)) {
+    const legacyRow = { ...row };
+    delete legacyRow.comment_id;
+    delete legacyRow.reply_id;
+    await supabase.from("notifications").insert(legacyRow);
+  }
 }
 
 // ── Called after a like is added ─────────────────────────────────────────
@@ -44,6 +57,7 @@ export async function handleLikeNotification({
 // ── Called after a comment is added ──────────────────────────────────────
 export async function handleCommentNotification({
   postId,
+  commentId,
   postOwnerId,
   actorId,
   actorUsername,
@@ -55,6 +69,7 @@ export async function handleCommentNotification({
     userId: postOwnerId,
     type: "comment",
     postId,
+    commentId,
     actorId,
     actorUsername,
     message,
@@ -64,6 +79,8 @@ export async function handleCommentNotification({
 // ── Called after a reply is added ────────────────────────────────────────
 export async function handleReplyNotification({
   postId,
+  commentId,
+  replyId,
   replyOwnerId,
   actorId,
   actorUsername,
@@ -75,6 +92,8 @@ export async function handleReplyNotification({
     userId: replyOwnerId,
     type: "reply",
     postId,
+    commentId,
+    replyId,
     actorId,
     actorUsername,
     message,

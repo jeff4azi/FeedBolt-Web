@@ -22,3 +22,22 @@ body {
   background: #374151;
   border-radius: 3px;
 }
+
+.target-highlight {
+  animation: target-highlight-fade 2.8s ease-out;
+}
+
+@keyframes target-highlight-fade {
+  0% {
+    background-color: rgba(168, 85, 247, 0.22);
+    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.28);
+  }
+  70% {
+    background-color: rgba(168, 85, 247, 0.1);
+    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.12);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 1px transparent;
+  }
+}

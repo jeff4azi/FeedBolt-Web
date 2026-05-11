@@ -119,8 +119,14 @@ export default function NotificationsPage() {
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     }
-    if (notif.post_id) navigate(`/post/${notif.post_id}`);
-    else if (notif.type === "follow" && notif.actor_id)
+    if (notif.post_id) {
+      const params = new URLSearchParams();
+      if (notif.type) params.set("fromNotification", notif.type);
+      if (notif.actor_id) params.set("actor", notif.actor_id);
+      if (notif.comment_id) params.set("comment", notif.comment_id);
+      if (notif.reply_id) params.set("reply", notif.reply_id);
+      navigate(`/post/${notif.post_id}?${params.toString()}`);
+    } else if (notif.type === "follow" && notif.actor_id)
       navigate(`/user/${notif.actor_id}`);
   };
 

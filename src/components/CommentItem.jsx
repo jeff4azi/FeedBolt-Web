@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Heart,
@@ -21,6 +21,8 @@ function ReplyItem({
   onDeleted,
   currentUser,
   commentUsername,
+  isHighlighted,
+  targetRef,
 }) {
   const navigate = useNavigate();
   const profile = reply.profiles;
@@ -112,7 +114,12 @@ function ReplyItem({
           >
             <Avatar src={profile?.avatar_url} size={26} />
           </button>
-          <div className="ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2">
+          <div
+            ref={targetRef}
+            className={`ml-2 flex-1 bg-[#121218] rounded-xl px-3 py-2 transition-colors ${
+              isHighlighted ? "target-highlight" : ""
+            }`}
+          >
             <div className="flex items-center justify-between mb-0.5">
               <div className="flex items-center gap-1">
                 <span className="text-white font-semibold text-xs">
@@ -174,6 +181,8 @@ export default function CommentItem({
   onReply,
   onDeleteComment,
   replyTarget,
+  targetCommentId,
+  targetReplyId,
   onRegisterFetch,
 }) {
   const navigate = useNavigate();
@@ -188,7 +197,13 @@ export default function CommentItem({
   const [replies, setReplies] = useState([]);
   const [showReplies, setShowReplies] = useState(false);
   const [repliesLoaded, setRepliesLoaded] = useState(false);
+  const commentRef = useRef(null);
+  const replyRefs = useRef({});
   const { confirm, state, handleConfirm, handleCancel } = useConfirm();
+
+  const isTargetComment =
+    targetCommentId && String(targetCommentId) === String(comment.id);
+  const isTargetingReply = isTargetComment && targetReplyId;
 
   useEffect(() => {
     if (!user) return;
@@ -223,6 +238,38 @@ export default function CommentItem({
       if (opts?.show) setShowReplies(true);
     });
   }, [onRegisterFetch, fetchReplies]);
+
+  useEffect(() => {
+    if (!isTargetComment) return;
+
+    if (isTargetingReply) {
+      setShowReplies(true);
+      if (!repliesLoaded) fetchReplies();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      commentRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchReplies, isTargetComment, isTargetingReply, repliesLoaded]);
+
+  useEffect(() => {
+    if (!isTargetingReply || !showReplies || !repliesLoaded) return;
+
+    const timer = window.setTimeout(() => {
+      replyRefs.current[targetReplyId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [isTargetingReply, repliesLoaded, showReplies, targetReplyId]);
 
   const handleToggleReplies = async () => {
     if (!showReplies && !repliesLoaded) await fetchReplies();
@@ -293,7 +340,12 @@ export default function CommentItem({
           <Avatar src={profile?.avatar_url} size={32} />
         </button>
         <div className="ml-3 flex-1">
-          <div className="bg-[#1a1a24] rounded-xl px-3 py-2.5">
+          <div
+            ref={commentRef}
+            className={`bg-[#1a1a24] rounded-xl px-3 py-2.5 transition-colors ${
+              isTargetComment && !targetReplyId ? "target-highlight" : ""
+            }`}
+          >
             <div className="flex items-center justify-between mb-1">
               <span className="text-white font-semibold text-xs">
                 {username}
@@ -392,6 +444,13 @@ export default function CommentItem({
                   reply={r}
                   currentUser={user}
                   commentUsername={username}
+                  isHighlighted={
+                    targetReplyId && String(targetReplyId) === String(r.id)
+                  }
+                  targetRef={(node) => {
+                    if (node) replyRefs.current[r.id] = node;
+                    else delete replyRefs.current[r.id];
+                  }}
                   onDeleted={handleReplyDeleted}
                   onReply={(targetUsername) =>
                     onReply({

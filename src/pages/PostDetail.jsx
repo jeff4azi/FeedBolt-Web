@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Heart, MessageCircle, Send, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -23,6 +23,7 @@ import { trackEvent } from "../lib/analytics";
 export default function PostDetailPage() {
   const navigate = useNavigate();
   const { postId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user, profile: authProfile } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -34,8 +35,18 @@ export default function PostDetailPage() {
   const [kbHeight, setKbHeight] = useState(0);
   // reply state — null means we're in comment mode
   const [replyTarget, setReplyTarget] = useState(null); // { commentId, commentOwnerId, username }
+  const [resolvedNotificationTarget, setResolvedNotificationTarget] =
+    useState(null);
   const fetchRepliesRef = useRef({});
   const inputRef = useRef(null);
+
+  const targetCommentId =
+    searchParams.get("comment") ?? resolvedNotificationTarget?.commentId;
+  const targetReplyId =
+    searchParams.get("reply") ?? resolvedNotificationTarget?.replyId;
+  const notificationType = searchParams.get("fromNotification");
+  const notificationActorId = searchParams.get("actor");
+  const notificationSearchKey = searchParams.toString();
 
   useEffect(() => {
     const vv = window.visualViewport;
@@ -145,7 +156,11 @@ export default function PostDetailPage() {
         content: text,
         replied_to_username: replyTarget.username,
       };
-      const { error } = await supabase.from("comment_replies").insert(payload);
+      const { data, error } = await supabase
+        .from("comment_replies")
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) {
         setCommentText(text);
         return;
@@ -157,6 +172,8 @@ export default function PostDetailPage() {
       if (replyTarget.commentOwnerId !== user.id) {
         handleReplyNotification({
           postId,
+          commentId: replyTarget.commentId,
+          replyId: data?.id,
           replyOwnerId: replyTarget.commentOwnerId,
           actorId: user.id,
           actorUsername,
@@ -164,11 +181,15 @@ export default function PostDetailPage() {
       }
     } else {
       // ── Submit comment ──
-      const { error } = await supabase.from("comments").insert({
-        post_id: postId,
-        user_id: user.id,
-        content: text,
-      });
+      const { data, error } = await supabase
+        .from("comments")
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: text,
+        })
+        .select("id")
+        .single();
       if (error) {
         setCommentText(text);
         return;
@@ -178,6 +199,7 @@ export default function PostDetailPage() {
       if (post?.user_id && post.user_id !== user.id) {
         handleCommentNotification({
           postId,
+          commentId: data?.id,
           postOwnerId: post.user_id,
           actorId: user.id,
           actorUsername,
@@ -196,6 +218,52 @@ export default function PostDetailPage() {
     setReplyTarget(null);
     setCommentText("");
   };
+
+  useEffect(() => {
+    setResolvedNotificationTarget(null);
+  }, [postId, notificationSearchKey]);
+
+  useEffect(() => {
+    if (!comments.length || targetCommentId || !notificationActorId) return;
+
+    if (notificationType === "comment") {
+      const matchingComment = [...comments]
+        .reverse()
+        .find((comment) => comment.user_id === notificationActorId);
+      if (matchingComment) {
+        setResolvedNotificationTarget({ commentId: matchingComment.id });
+      }
+      return;
+    }
+
+    if (notificationType !== "reply") return;
+
+    let cancelled = false;
+    const resolveReplyTarget = async () => {
+      const commentIds = comments.map((comment) => comment.id);
+      const { data } = await supabase
+        .from("comment_replies")
+        .select("id, comment_id")
+        .in("comment_id", commentIds)
+        .eq("user_id", notificationActorId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!cancelled && data) {
+        setResolvedNotificationTarget({
+          commentId: data.comment_id,
+          replyId: data.id,
+        });
+      }
+    };
+
+    resolveReplyTarget();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [comments, notificationActorId, notificationType, targetCommentId]);
 
   const profile = post?.profiles;
   const username = profile?.username ?? profile?.fullname ?? "Unknown";
@@ -311,6 +379,8 @@ export default function PostDetailPage() {
                     setComments((prev) => prev.filter((x) => x.id !== id))
                   }
                   replyTarget={replyTarget}
+                  targetCommentId={targetCommentId}
+                  targetReplyId={targetReplyId}
                   onRegisterFetch={(fn) => {
                     fetchRepliesRef.current[c.id] = fn;
                   }}
