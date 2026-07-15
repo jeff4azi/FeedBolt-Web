@@ -195,3 +195,64 @@ export async function deleteAvatarImage(userId) {
     throw new Error(err.error ?? `Failed to delete avatar (${res.status}).`);
   }
 }
+
+/**
+ * Generates a JPEG cover image from the first page of a PDF file.
+ * Returns a Blob (image/jpeg).
+ */
+export async function generatePdfPreview(pdfFile) {
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).toString();
+
+  const arrayBuffer = await pdfFile.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdf.getPage(1);
+
+  const viewport = page.getViewport({ scale: 1.5 });
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport })
+    .promise;
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return reject(new Error("Failed to generate PDF preview."));
+        resolve(blob);
+      },
+      "image/jpeg",
+      0.85,
+    );
+  });
+}
+
+/**
+ * Uploads a PDF post via multipart/form-data to /upload-pdf.
+ * Generates a preview image from the first page client-side.
+ */
+export async function uploadPdfPost({ pdfFile, content, userId }) {
+  const previewBlob = await generatePdfPreview(pdfFile);
+
+  const formData = new FormData();
+  formData.append("pdf", pdfFile, pdfFile.name);
+  formData.append(
+    "preview",
+    new File([previewBlob], pdfFile.name.replace(/\.pdf$/i, ".jpg"), {
+      type: "image/jpeg",
+    }),
+  );
+  formData.append("content", content);
+  formData.append("userId", userId);
+
+  const res = await fetch(`${BASE_URL}/upload-pdf`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "PDF upload failed.");
+  return data;
+}
