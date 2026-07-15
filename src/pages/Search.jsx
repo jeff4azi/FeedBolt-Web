@@ -78,7 +78,7 @@ export default function SearchPage() {
     const params = new URLSearchParams(window.location.search);
     return params.get("q") ?? "";
   });
-  const [tab, setTab] = useState("top"); // top | people | posts
+  const [tab, setTab] = useState("top"); // top | people | posts | pdfs
   const [loading, setLoading] = useState(false);
   const [trendingTags, setTrendingTags] = useState([]);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -128,7 +128,9 @@ export default function SearchPage() {
         .select(
           "*, profiles(id, fullname, username, avatar_url), comments(count)",
         )
-        .or(`content.ilike.%${term}%,image_public_id.ilike.%${term}%`)
+        .or(
+          `content.ilike.%${term}%,image_public_id.ilike.%${term}%,title.ilike.%${term}%`,
+        )
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
@@ -166,6 +168,7 @@ export default function SearchPage() {
     { id: "top", label: "Top" },
     { id: "people", label: "People" },
     { id: "posts", label: "Posts" },
+    { id: "pdfs", label: "PDFs" },
   ];
 
   return (
@@ -271,9 +274,13 @@ export default function SearchPage() {
           ) : (
             <>
               {/* TOP tab */}
-              {tab === "top" && (
-                <>
-                  {results.users.length === 0 && results.posts.length === 0 ? (
+              {tab === "top" &&
+                (() => {
+                  const regularPosts = results.posts.filter((p) => !p.is_pdf);
+                  const pdfPosts = results.posts.filter((p) => p.is_pdf);
+                  const hasAny =
+                    results.users.length > 0 || results.posts.length > 0;
+                  return !hasAny ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                       <p className="text-gray-500 text-sm">
                         No results for "{query}"
@@ -296,87 +303,102 @@ export default function SearchPage() {
                           </div>
                         </>
                       )}
-                      {results.posts.length > 0 && (
+                      {regularPosts.length > 0 && (
                         <>
                           <SectionHeader icon={Hash} label="Posts" />
-                          {results.posts
-                            .slice(0, 5)
-                            .map((post) =>
-                              post.is_pdf ? (
-                                <PdfCard
-                                  key={post.id}
-                                  post={post}
-                                  currentUserId={user?.id}
-                                  onRefresh={() => runSearch(query)}
-                                />
-                              ) : (
-                                <PostCard
-                                  key={post.id}
-                                  post={post}
-                                  currentUserId={user?.id}
-                                  onRefresh={() => runSearch(query)}
-                                />
-                              ),
-                            )}
+                          <div className="pt-1">
+                            {regularPosts.slice(0, 3).map((post) => (
+                              <PostCard
+                                key={post.id}
+                                post={post}
+                                currentUserId={user?.id}
+                                onRefresh={() => runSearch(query)}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      {pdfPosts.length > 0 && (
+                        <>
+                          <SectionHeader icon={Hash} label="PDFs" />
+                          <div className="pt-1">
+                            {pdfPosts.slice(0, 3).map((post) => (
+                              <PdfCard
+                                key={post.id}
+                                post={post}
+                                currentUserId={user?.id}
+                                onRefresh={() => runSearch(query)}
+                              />
+                            ))}
+                          </div>
                         </>
                       )}
                     </>
-                  )}
-                </>
-              )}
+                  );
+                })()}
 
               {/* PEOPLE tab */}
-              {tab === "people" && (
-                <>
-                  {results.users.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                      <p className="text-gray-500 text-sm">No people found</p>
-                    </div>
-                  ) : (
-                    <div className="px-2 pt-2">
-                      {results.users.map((p) => (
-                        <UserRow
-                          key={p.id}
-                          profile={p}
-                          currentUserId={user?.id}
-                          onNavigate={navigate}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+              {tab === "people" &&
+                (results.users.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <p className="text-gray-500 text-sm">No people found</p>
+                  </div>
+                ) : (
+                  <div className="px-2 pt-2">
+                    {results.users.map((p) => (
+                      <UserRow
+                        key={p.id}
+                        profile={p}
+                        currentUserId={user?.id}
+                        onNavigate={navigate}
+                      />
+                    ))}
+                  </div>
+                ))}
 
-              {/* POSTS tab */}
-              {tab === "posts" && (
-                <>
-                  {results.posts.length === 0 ? (
+              {/* POSTS tab — regular posts only */}
+              {tab === "posts" &&
+                (() => {
+                  const regularPosts = results.posts.filter((p) => !p.is_pdf);
+                  return regularPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20">
                       <p className="text-gray-500 text-sm">No posts found</p>
                     </div>
                   ) : (
                     <div className="pt-2">
-                      {results.posts.map((post) =>
-                        post.is_pdf ? (
-                          <PdfCard
-                            key={post.id}
-                            post={post}
-                            currentUserId={user?.id}
-                            onRefresh={() => runSearch(query)}
-                          />
-                        ) : (
-                          <PostCard
-                            key={post.id}
-                            post={post}
-                            currentUserId={user?.id}
-                            onRefresh={() => runSearch(query)}
-                          />
-                        ),
-                      )}
+                      {regularPosts.map((post) => (
+                        <PostCard
+                          key={post.id}
+                          post={post}
+                          currentUserId={user?.id}
+                          onRefresh={() => runSearch(query)}
+                        />
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+                  );
+                })()}
+
+              {/* PDFS tab */}
+              {tab === "pdfs" &&
+                (() => {
+                  const pdfPosts = results.posts.filter((p) => p.is_pdf);
+                  return pdfPosts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <p className="text-gray-500 text-sm">No PDFs found</p>
+                    </div>
+                  ) : (
+                    <div className="pt-2">
+                      {pdfPosts.map((post) => (
+                        <PdfCard
+                          key={post.id}
+                          post={post}
+                          currentUserId={user?.id}
+                          onRefresh={() => runSearch(query)}
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
             </>
           )}
         </div>
