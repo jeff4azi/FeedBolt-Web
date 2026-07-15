@@ -7,11 +7,11 @@ import {
   Share2,
   Check,
   Download,
-  ExternalLink,
   FileText,
   Send,
   X,
   BookOpen,
+  Loader,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -45,6 +45,7 @@ export default function PdfDetailPage() {
   const [copied, setCopied] = useState(false);
   const [replyTarget, setReplyTarget] = useState(null);
   const [kbHeight, setKbHeight] = useState(0);
+  const [downloading, setDownloading] = useState(false);
   const [resolvedNotificationTarget, setResolvedNotificationTarget] =
     useState(null);
 
@@ -194,6 +195,38 @@ export default function PdfDetailPage() {
       await navigator.clipboard?.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleOpenPdf = () => {
+    if (!pdfUrl) return;
+    navigate(`/pdf/${pdfId}/view`, {
+      state: { pdfUrl, title, filename: `${title}.pdf` },
+    });
+  };
+
+  const handleDownload = async () => {
+    if (!pdfUrl || downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(pdfUrl);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    } catch {
+      // CORS fallback: open directly
+      window.open(pdfUrl, "_blank", "noopener,noreferrer");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -387,27 +420,25 @@ export default function PdfDetailPage() {
                 {/* CTA buttons */}
                 {pdfUrl && (
                   <div className="flex gap-3 mb-4">
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                    <button
+                      onClick={handleOpenPdf}
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-xl transition-colors"
                     >
-                      <ExternalLink size={16} />
+                      <FileText size={16} />
                       Open PDF
-                    </a>
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1a1a2e] hover:bg-[#20203a] border border-gray-700 hover:border-purple-700 text-gray-300 text-sm font-medium rounded-xl transition-colors"
+                    </button>
+                    <button
+                      onClick={handleDownload}
+                      disabled={downloading}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1a1a2e] hover:bg-[#20203a] border border-gray-700 hover:border-purple-700 text-gray-300 text-sm font-medium rounded-xl transition-colors disabled:opacity-60"
                     >
-                      <Download size={16} />
+                      {downloading ? (
+                        <Loader size={16} className="animate-spin" />
+                      ) : (
+                        <Download size={16} />
+                      )}
                       Download
-                    </a>
+                    </button>
                   </div>
                 )}
 

@@ -14,6 +14,7 @@ import FeedPage from "./pages/Feed";
 import ProfilePage from "./pages/Profile";
 import PostDetailPage from "./pages/PostDetail";
 import PdfDetailPage from "./pages/PdfDetail";
+import PdfViewerPage from "./pages/PdfViewer";
 import CreatePostPage from "./pages/CreatePost";
 import UserProfilePage from "./pages/UserProfile";
 import EditProfilePage from "./pages/EditProfile";
@@ -70,6 +71,7 @@ function RootNavigator() {
       </Route>
       <Route path="/post/:postId" element={<PostDetailPage />} />
       <Route path="/pdf/:pdfId" element={<PdfDetailPage />} />
+      <Route path="/pdf/:pdfId/view" element={<PdfViewerPage />} />
       <Route path="/create-post" element={<CreatePostPage />} />
       <Route path="/user/:userId" element={<UserProfilePage />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
