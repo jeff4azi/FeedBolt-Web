@@ -290,7 +290,7 @@ export default function PdfDetailPage() {
     ? getPlaceholderUrl(post.image_url)
     : null;
   const pdfUrl = getPdfUrl(post?.image_url);
-  const title = getPdfTitle(post?.image_url);
+  const title = post?.title || getPdfTitle(post?.image_url);
   const userAvatar = authProfile?.avatar_url ?? user?.user_metadata?.avatar_url;
 
   return (
@@ -307,7 +307,7 @@ export default function PdfDetailPage() {
         </button>
         <FileText size={18} color="#a855f7" className="mr-2 shrink-0" />
         <h2 className="text-white text-lg font-semibold truncate">
-          Study Material
+          {post?.title || getPdfTitle(post?.image_url) || "Study Material"}
         </h2>
       </div>
 

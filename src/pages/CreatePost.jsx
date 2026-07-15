@@ -14,6 +14,7 @@ import { extractVideoId } from "../lib/youtubeUtils";
 export default function CreatePostPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -146,6 +147,7 @@ export default function CreatePostPage() {
         const result = await uploadPdfPost({
           pdfFile: pickedPdf,
           content: content.trim(),
+          title: title.trim() || undefined,
           userId: user.id,
         });
         trackEvent("Post", "create", "pdf");
@@ -170,6 +172,7 @@ export default function CreatePostPage() {
           .insert({
             user_id: user.id,
             content: content.trim(),
+            title: title.trim() || null,
             image_url,
             image_public_id,
           })
@@ -231,6 +234,16 @@ export default function CreatePostPage() {
           <Avatar src={avatar} size={40} className="shrink-0 mt-1" />
           <div className="flex-1">
             <p className="text-white font-semibold text-sm mb-2">{username}</p>
+            {/* Optional title */}
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={
+                mode === "pdf" ? "PDF title (optional)" : "Title (optional)"
+              }
+              maxLength={150}
+              className="w-full bg-transparent text-white text-base font-semibold leading-6 outline-none placeholder-gray-700 mb-1"
+            />
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}

@@ -234,7 +234,7 @@ export async function generatePdfPreview(pdfFile) {
  * Uploads a PDF post via multipart/form-data to /upload-pdf.
  * Generates a preview image from the first page client-side.
  */
-export async function uploadPdfPost({ pdfFile, content, userId }) {
+export async function uploadPdfPost({ pdfFile, content, title, userId }) {
   const previewBlob = await generatePdfPreview(pdfFile);
 
   const formData = new FormData();
@@ -247,6 +247,7 @@ export async function uploadPdfPost({ pdfFile, content, userId }) {
   );
   formData.append("content", content);
   formData.append("userId", userId);
+  if (title) formData.append("title", title);
 
   const res = await fetch(`${BASE_URL}/upload-pdf`, {
     method: "POST",

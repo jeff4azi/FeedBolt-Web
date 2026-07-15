@@ -30,12 +30,12 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
     ? getPlaceholderUrl(post.image_url)
     : null;
   const pdfUrl = getPdfUrl(post.image_url);
-  const title = getPdfTitle(post.image_url);
+  const title = post.title || getPdfTitle(post.image_url);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(
-    post.comments?.[0]?.count ?? 0
+    post.comments?.[0]?.count ?? 0,
   );
   const [copied, setCopied] = useState(false);
 
@@ -55,7 +55,7 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
           });
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -179,9 +179,7 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
               <button onClick={handleAvatarClick} className="shrink-0">
                 <Avatar src={profile?.avatar_url} size={20} />
               </button>
-              <span className="text-gray-500 text-xs truncate">
-                {username}
-              </span>
+              <span className="text-gray-500 text-xs truncate">{username}</span>
               <span className="text-gray-700 text-xs">.</span>
               <span className="text-gray-600 text-xs">{timestamp}</span>
             </div>

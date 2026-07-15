@@ -254,6 +254,11 @@ export default function PostCard({
         )}
       </div>
 
+      {post.title ? (
+        <p className="text-white font-semibold text-sm leading-5 mb-1">
+          {post.title}
+        </p>
+      ) : null}
       <RichText
         hashtags
         text={

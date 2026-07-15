@@ -277,7 +277,7 @@ export default function PostDetailPage() {
     ? getOptimizedImageUrl(post.image_url, { width: "w_700" })
     : null;
   const youtubeVideoId = post
-    ? extractVideoId(post.image_public_id) ?? extractVideoId(post.image_url)
+    ? (extractVideoId(post.image_public_id) ?? extractVideoId(post.image_url))
     : null;
   const userAvatar = authProfile?.avatar_url ?? user?.user_metadata?.avatar_url;
 
@@ -316,6 +316,11 @@ export default function PostDetailPage() {
                   </p>
                 </div>
               </div>
+              {post.title ? (
+                <p className="text-white font-semibold text-base leading-6 mb-2">
+                  {post.title}
+                </p>
+              ) : null}
               <RichText
                 hashtags
                 text={post.content}
