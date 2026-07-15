@@ -4,6 +4,7 @@ import { LogOut, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
+import PdfCard from "../components/PdfCard";
 import { PostCardSkeleton, ProfileSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -171,15 +172,24 @@ export default function ProfilePage() {
       ) : posts.length === 0 ? (
         <p className="text-gray-600 text-center mt-8">No posts yet.</p>
       ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            currentUserId={user?.id}
-            onRefresh={fetchData}
-            showOwnerActions
-          />
-        ))
+        posts.map((post) =>
+          post.is_pdf ? (
+            <PdfCard
+              key={post.id}
+              post={post}
+              currentUserId={user?.id}
+              onRefresh={fetchData}
+            />
+          ) : (
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={user?.id}
+              onRefresh={fetchData}
+              showOwnerActions
+            />
+          ),
+        )
       )}
     </div>
   );

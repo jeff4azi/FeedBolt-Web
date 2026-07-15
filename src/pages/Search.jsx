@@ -4,6 +4,7 @@ import { Search, TrendingUp, Users, Hash, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
+import PdfCard from "../components/PdfCard";
 import Avatar from "../components/Avatar";
 import { PostCardSkeleton } from "../components/Skeleton";
 import { trackEvent } from "../lib/analytics";
@@ -127,7 +128,7 @@ export default function SearchPage() {
         .select(
           "*, profiles(id, fullname, username, avatar_url), comments(count)",
         )
-        .ilike("content", `%${term}%`)
+        .or(`content.ilike.%${term}%,image_public_id.ilike.%${term}%`)
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
@@ -298,14 +299,25 @@ export default function SearchPage() {
                       {results.posts.length > 0 && (
                         <>
                           <SectionHeader icon={Hash} label="Posts" />
-                          {results.posts.slice(0, 5).map((post) => (
-                            <PostCard
-                              key={post.id}
-                              post={post}
-                              currentUserId={user?.id}
-                              onRefresh={() => runSearch(query)}
-                            />
-                          ))}
+                          {results.posts
+                            .slice(0, 5)
+                            .map((post) =>
+                              post.is_pdf ? (
+                                <PdfCard
+                                  key={post.id}
+                                  post={post}
+                                  currentUserId={user?.id}
+                                  onRefresh={() => runSearch(query)}
+                                />
+                              ) : (
+                                <PostCard
+                                  key={post.id}
+                                  post={post}
+                                  currentUserId={user?.id}
+                                  onRefresh={() => runSearch(query)}
+                                />
+                              ),
+                            )}
                         </>
                       )}
                     </>
@@ -344,14 +356,23 @@ export default function SearchPage() {
                     </div>
                   ) : (
                     <div className="pt-2">
-                      {results.posts.map((post) => (
-                        <PostCard
-                          key={post.id}
-                          post={post}
-                          currentUserId={user?.id}
-                          onRefresh={() => runSearch(query)}
-                        />
-                      ))}
+                      {results.posts.map((post) =>
+                        post.is_pdf ? (
+                          <PdfCard
+                            key={post.id}
+                            post={post}
+                            currentUserId={user?.id}
+                            onRefresh={() => runSearch(query)}
+                          />
+                        ) : (
+                          <PostCard
+                            key={post.id}
+                            post={post}
+                            currentUserId={user?.id}
+                            onRefresh={() => runSearch(query)}
+                          />
+                        ),
+                      )}
                     </div>
                   )}
                 </>
