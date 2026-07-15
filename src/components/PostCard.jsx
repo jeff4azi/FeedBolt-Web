@@ -62,7 +62,14 @@ function OwnerMenu({ post, onDeleted, onDeletingChange }) {
   const handleEdit = (e) => {
     e.stopPropagation();
     setOpen(false);
-    navigate(`/edit-post/${post.id}`, { state: { content: post.content } });
+    navigate(`/edit-post/${post.id}`, {
+      state: {
+        title: post.title ?? "",
+        content: post.content,
+        image_url: post.image_url ?? null,
+        image_public_id: post.image_public_id ?? null,
+      },
+    });
   };
 
   return (

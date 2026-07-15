@@ -179,6 +179,7 @@ export default function ProfilePage() {
               post={post}
               currentUserId={user?.id}
               onRefresh={fetchData}
+              showOwnerActions
             />
           ) : (
             <PostCard

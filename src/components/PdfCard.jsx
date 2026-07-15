@@ -7,16 +7,125 @@ import {
   Check,
   FileText,
   Download,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
-import { getOptimizedImageUrl, getPlaceholderUrl } from "../lib/imageUtils";
+import {
+  getOptimizedImageUrl,
+  getPlaceholderUrl,
+  deletePostImage,
+} from "../lib/imageUtils";
 import { getPdfUrl, getPdfTitle } from "../lib/pdfUtils";
 import { timeAgo } from "../lib/timeAgo";
 import Avatar from "./Avatar";
 import ProgressiveImage from "./ProgressiveImage";
+import ConfirmDialog from "./ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
 
-export default function PdfCard({ post, currentUserId, onRefresh }) {
+// ── Owner menu (same pattern as PostCard) ─────────────────────────────────────
+function OwnerMenu({ post, onDeleted, onDeletingChange }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef(null);
+  const { confirm, state, handleConfirm, handleCancel } = useConfirm();
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    setOpen(false);
+    const ok = await confirm("Delete this PDF post?");
+    if (!ok) return;
+    setDeleting(true);
+    onDeletingChange?.(true);
+    try {
+      if (post?.image_public_id) await deletePostImage(post.id).catch(() => {});
+      await supabase.from("posts").delete().eq("id", post.id);
+      onDeleted?.();
+    } finally {
+      setDeleting(false);
+      onDeletingChange?.(false);
+    }
+  };
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    setOpen(false);
+    navigate(`/edit-post/${post.id}`, {
+      state: {
+        title: post.title ?? "",
+        content: post.content,
+        image_url: post.image_url ?? null,
+        image_public_id: post.image_public_id ?? null,
+        is_pdf: true,
+      },
+    });
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      {state && (
+        <ConfirmDialog
+          message={state.message}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        disabled={deleting}
+        className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+      >
+        {deleting ? (
+          <span className="flex items-center gap-1 text-red-400 text-xs">
+            <Trash2 size={13} /> Deleting...
+          </span>
+        ) : (
+          <MoreHorizontal size={18} />
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-7 z-20 bg-[#1a1a2e] border border-gray-800 rounded-xl shadow-xl overflow-hidden min-w-37.5">
+          <button
+            onClick={handleEdit}
+            className="flex items-center gap-3 w-full px-4 py-3 text-white hover:bg-[#121218] transition-colors text-sm"
+          >
+            <Pencil size={16} color="#a855f7" /> Edit post
+          </button>
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-[#121218] transition-colors text-sm"
+          >
+            <Trash2 size={16} /> Delete post
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PdfCard ───────────────────────────────────────────────────────────────────
+export default function PdfCard({
+  post,
+  currentUserId,
+  onRefresh,
+  showOwnerActions,
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const profile = post.profiles;
@@ -31,6 +140,9 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
     : null;
   const pdfUrl = getPdfUrl(post.image_url);
   const title = post.title || getPdfTitle(post.image_url);
+
+  const isOwner = showOwnerActions && user?.id === post.user_id;
+  const [deleting, setDeleting] = useState(false);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -125,15 +237,12 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
     navigate("/pdf/" + post.id);
   };
 
-  const handleDownloadClick = (e) => {
-    e.stopPropagation();
-  };
-
   return (
     <div
       ref={cardRef}
       onClick={handleCardClick}
       className="group bg-[#121218] rounded-2xl mb-3 mx-4 cursor-pointer overflow-hidden border border-gray-800/40 transition-all duration-300 hover:border-purple-700/60 hover:shadow-[0_8px_30px_rgba(168,85,247,0.12)] hover:-translate-y-0.5"
+      style={{ opacity: isOwner && deleting ? 0.4 : 1 }}
     >
       <div className="flex sm:flex-row flex-col">
         {/* ── Thumbnail ─────────────────────────────────────────────────── */}
@@ -166,9 +275,22 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
         {/* ── Info block ───────────────────────────────────────────────── */}
         <div className="min-w-0 flex-1 flex flex-col justify-between p-4">
           <div>
-            <p className="text-white font-semibold text-sm sm:text-base leading-5 line-clamp-2 group-hover:text-purple-300 transition-colors duration-200">
-              {title}
-            </p>
+            {/* Title row with optional owner menu */}
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-white font-semibold text-sm sm:text-base leading-5 line-clamp-2 group-hover:text-purple-300 transition-colors duration-200 flex-1">
+                {title}
+              </p>
+              {isOwner && (
+                <div className="shrink-0 -mt-1 -mr-1">
+                  <OwnerMenu
+                    post={post}
+                    onDeleted={onRefresh}
+                    onDeletingChange={setDeleting}
+                  />
+                </div>
+              )}
+            </div>
+
             {post.content ? (
               <p className="text-gray-400 text-xs leading-5 mt-1 line-clamp-2">
                 {post.content}
@@ -234,7 +356,7 @@ export default function PdfCard({ post, currentUserId, onRefresh }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                onClick={handleDownloadClick}
+                onClick={(e) => e.stopPropagation()}
                 className="ml-auto flex items-center gap-1.5 text-gray-500 hover:text-purple-400 hover:scale-110 transition-all"
                 title="Download PDF"
               >
