@@ -62,6 +62,32 @@ export function PostDetailSkeleton() {
   );
 }
 
+export function PdfCardSkeleton() {
+  return (
+    <div className="bg-[#121218] rounded-2xl mb-3 mx-4 overflow-hidden border border-gray-800/40">
+      <SkeletonBox className="w-full h-44 rounded-none" />
+      <div className="px-4 pt-3 pb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <SkeletonBox className="w-4 h-4 rounded" />
+          <SkeletonBox className="w-3/4 h-3.5" />
+        </div>
+        <SkeletonBox className="w-full h-2.5 mb-1.5" />
+        <SkeletonBox className="w-2/3 h-2.5 mb-3" />
+        <div className="flex items-center gap-2 mb-3">
+          <SkeletonBox className="w-6 h-6 rounded-full" />
+          <SkeletonBox className="w-24 h-2.5" />
+        </div>
+        <div className="border-t border-gray-800/60 mb-3" />
+        <div className="flex gap-5">
+          <SkeletonBox className="w-10 h-3" />
+          <SkeletonBox className="w-10 h-3" />
+          <SkeletonBox className="w-10 h-3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProfileSkeleton() {
   return (
     <div className="flex flex-col items-center p-6 gap-3">

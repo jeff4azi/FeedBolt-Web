@@ -4,6 +4,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import PostCard from "../components/PostCard";
+import PdfCard from "../components/PdfCard";
 import { PostCardSkeleton } from "../components/Skeleton";
 import Avatar from "../components/Avatar";
 import InstallPrompt from "../components/InstallPrompt";
@@ -193,15 +194,24 @@ export default function FeedPage() {
         </p>
       ) : (
         <>
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUserId={user?.id}
-              onUpdate={handlePostUpdate} // optimistic single-post update
-              onRefresh={handleRefresh} // escape hatch for destructive actions (delete, etc.)
-            />
-          ))}
+          {posts.map((post) =>
+            post.is_pdf ? (
+              <PdfCard
+                key={post.id}
+                post={post}
+                currentUserId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            ) : (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={user?.id}
+                onUpdate={handlePostUpdate}
+                onRefresh={handleRefresh}
+              />
+            ),
+          )}
 
           <div ref={sentinelRef} className="pb-2">
             {loadingMore && (
