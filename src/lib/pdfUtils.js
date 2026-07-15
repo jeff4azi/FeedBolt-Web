@@ -1,10 +1,15 @@
 /**
- * Given a Cloudinary preview image URL (.jpg), returns the corresponding PDF URL.
- * e.g. https://res.cloudinary.com/.../file.jpg  →  .../file.pdf
+ * Given a Cloudinary preview image URL (.jpg), returns the corresponding raw PDF URL.
+ * Handles both the path segment (image/upload → raw/upload) and extension (.jpg → .pdf).
+ *
+ * e.g. https://res.cloudinary.com/x/image/upload/v1/file.jpg
+ *   →  https://res.cloudinary.com/x/raw/upload/v1/file.pdf
  */
 export function getPdfUrl(imageUrl) {
   if (!imageUrl) return null;
-  return imageUrl.replace(/\.jpg(\?.*)?$/, ".pdf");
+  return imageUrl
+    .replace("/image/upload/", "/raw/upload/")
+    .replace(/\.jpg(\?.*)?$/, ".pdf");
 }
 
 /**
