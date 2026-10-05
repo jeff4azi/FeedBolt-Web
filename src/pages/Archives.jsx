@@ -64,6 +64,28 @@ function ArchiveCard({ post, currentUserId }) {
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
+  const cardRef = useRef(null);
+
+  // Fire impression once when card scrolls 50% into view
+  useEffect(() => {
+    if (!user) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      async ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          await supabase.rpc("increment_post_impression", {
+            p_user_id: user.id,
+            p_post_id: post.id,
+          });
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post.id, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -127,6 +149,7 @@ function ArchiveCard({ post, currentUserId }) {
 
   return (
     <div
+      ref={cardRef}
       onClick={handleCardClick}
       className="group bg-[#121218] rounded-2xl overflow-hidden border border-gray-800/40 cursor-pointer flex flex-col transition-all duration-300 hover:border-purple-700/50 hover:shadow-[0_8px_32px_rgba(168,85,247,0.13)] hover:-translate-y-1"
     >
