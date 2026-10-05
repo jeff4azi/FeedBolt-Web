@@ -14,3 +14,16 @@ export function timeAgo(iso) {
   if (mo < 12) return `${mo}mo`;
   return `${Math.floor(d / 365)}y`;
 }
+
+// Format a count the way X (Twitter) does: 0–999 as-is, then K/M with 1 decimal
+// trimmed if it's a round number. e.g. 82000 → "82K", 2900 → "2.9K", 1200000 → "1.2M"
+export function formatCount(n) {
+  if (!n || n < 1) return "0";
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) {
+    const k = n / 1000;
+    return (Number.isInteger(k) ? k : k.toFixed(1).replace(/\.0$/, "")) + "K";
+  }
+  const m = n / 1_000_000;
+  return (Number.isInteger(m) ? m : m.toFixed(1).replace(/\.0$/, "")) + "M";
+}

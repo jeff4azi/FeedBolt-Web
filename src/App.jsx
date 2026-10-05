@@ -22,6 +22,7 @@ import EditPostPage from "./pages/EditPost";
 import SearchPage from "./pages/Search";
 import NotificationsPage from "./pages/Notifications";
 import FollowListPage from "./pages/FollowList";
+import ArchivesPage from "./pages/Archives";
 import { trackPageView } from "./lib/analytics";
 
 function RootNavigator() {
@@ -66,6 +67,7 @@ function RootNavigator() {
       <Route element={<Layout />}>
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/archives" element={<ArchivesPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>

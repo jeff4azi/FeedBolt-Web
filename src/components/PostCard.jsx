@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  BarChart2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -17,7 +18,7 @@ import {
   deletePostImage,
 } from "../lib/imageUtils";
 import { extractVideoId } from "../lib/youtubeUtils";
-import { timeAgo } from "../lib/timeAgo";
+import { timeAgo, formatCount } from "../lib/timeAgo";
 import Avatar from "./Avatar";
 import YoutubePost from "./YoutubePost";
 import ConfirmDialog from "./ConfirmDialog";
@@ -149,6 +150,7 @@ export default function PostCard({
   const [commentCount, setCommentCount] = useState(
     post.comments?.[0]?.count ?? 0,
   );
+  const [viewCount, setViewCount] = useState(0);
   const [deleting, setDeleting] = useState(false);
 
   // ─── Impression tracking ────────────────────────────────────────────────────
@@ -189,6 +191,17 @@ export default function PostCard({
       .select("id", { count: "exact", head: true })
       .eq("post_id", post.id)
       .then(({ count }) => setCommentCount(count ?? 0));
+    supabase
+      .from("post_impressions")
+      .select("times_seen")
+      .eq("post_id", post.id)
+      .then(({ data }) => {
+        const total = (data ?? []).reduce(
+          (sum, r) => sum + (r.times_seen ?? 0),
+          0,
+        );
+        setViewCount(total);
+      });
   }, [post.id, user]);
 
   const handleLike = async (e) => {
@@ -333,6 +346,12 @@ export default function PostCard({
             <Share2 size={18} color="#6b7280" />
           )}
         </button>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <BarChart2 size={16} color="#4b5563" />
+          <span className="text-gray-600 text-xs">
+            {formatCount(viewCount)}
+          </span>
+        </div>
       </div>
     </div>
   );

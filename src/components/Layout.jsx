@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, User, Plus, Search, Bell } from "lucide-react";
+import { Home, User, Plus, Search, Bell, BookOpen } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
 import { useUnreadCount } from "../hooks/useNotifications";
@@ -48,6 +48,10 @@ export default function Layout() {
               )}
             </div>
             Notifications
+          </NavLink>
+          <NavLink to="/archives" className={navItem}>
+            <BookOpen size={19} />
+            Archives
           </NavLink>
           <NavLink to="/profile" className={navItem}>
             <User size={19} />
@@ -112,6 +116,17 @@ export default function Layout() {
         >
           <Search size={22} />
           Search
+        </NavLink>
+        <NavLink
+          to="/archives"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 flex-1 text-xs font-medium transition-colors ${
+              isActive ? "text-purple-400" : "text-gray-500"
+            }`
+          }
+        >
+          <BookOpen size={22} />
+          Archives
         </NavLink>
         <NavLink
           to="/notifications"
